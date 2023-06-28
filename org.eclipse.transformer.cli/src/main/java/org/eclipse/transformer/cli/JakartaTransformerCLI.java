@@ -14,7 +14,7 @@ package org.eclipse.transformer.cli;
 import java.io.PrintStream;
 
 import org.eclipse.transformer.Transformer.ResultCode;
-import org.eclipse.transformer.jakarta.JakartaTransform;
+import org.eclipse.transformer.jakarta.JakartaOptionsContainer;
 import org.osgi.annotation.bundle.Header;
 
 @Header(name = "Main-Class", value = "${@class}")
@@ -32,6 +32,6 @@ public class JakartaTransformerCLI extends TransformerCLI {
 	 */
 	public JakartaTransformerCLI(PrintStream sysOut, PrintStream sysErr, String... args) {
 		super(sysOut, sysErr, args);
-		setOptionDefaults(JakartaTransform.getRuleLoader(), JakartaTransform.getOptionDefaults());
+		setOptionDefaults(JakartaOptionsContainer.doGetRuleLoader(), JakartaOptionsContainer.doGetOptionDefaults());
 	}
 }
