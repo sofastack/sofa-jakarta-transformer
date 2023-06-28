@@ -35,7 +35,7 @@ import org.eclipse.transformer.AppOption;
 import org.eclipse.transformer.TransformOptions;
 import org.eclipse.transformer.Transformer;
 import org.eclipse.transformer.Transformer.ResultCode;
-import org.eclipse.transformer.jakarta.JakartaTransform;
+import org.eclipse.transformer.jakarta.JakartaOptionsContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,8 +122,8 @@ public class TransformerRunMojo extends AbstractMojo {
 		final File targetFile = new File(outputDirectory, sourceArtifact.getArtifactId() + "-" + targetClassifier + "-"
 			+ sourceArtifact.getVersion() + "." + sourceArtifact.getType());
 		TransformOptions options = new TransformOptions() {
-			final Map<String, String>	optionDefaults	= JakartaTransform.getOptionDefaults();
-			final Function<String, URL>		ruleLoader		= JakartaTransform.getRuleLoader();
+			final Map<String, String>	optionDefaults	= JakartaOptionsContainer.doGetOptionDefaults();
+			final Function<String, URL>		ruleLoader		= JakartaOptionsContainer.doGetRuleLoader();
 			@Override
 			public boolean hasOption(AppOption option) {
 				switch (option) {

@@ -49,7 +49,7 @@ import org.eclipse.transformer.action.impl.ClassActionImpl;
 import org.eclipse.transformer.action.impl.ClassChangesImpl;
 import org.eclipse.transformer.action.impl.ServiceLoaderConfigActionImpl;
 import org.eclipse.transformer.action.impl.ZipActionImpl;
-import org.eclipse.transformer.jakarta.JakartaTransform;
+import org.eclipse.transformer.jakarta.JakartaOptionsContainer;
 import org.eclipse.transformer.util.FileUtils;
 import org.eclipse.transformer.util.SignatureUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -1185,11 +1185,11 @@ public class TestTransformClass extends CaptureTest {
 	//
 
 	public static Map<String, String> getStandardRenames() throws IOException {
-		String transformerResourceName = JakartaTransform.class.getPackage()
+		String transformerResourceName = JakartaOptionsContainer.class.getPackage()
 			.getName()
 			.replace('.', '/');
 
-		String renamesResourceName = transformerResourceName + '/' + JakartaTransform.DEFAULT_RENAMES_REFERENCE;
+		String renamesResourceName = transformerResourceName + '/' + JakartaOptionsContainer.DEFAULT_RENAMES_REFERENCE;
 
 		return loadRenames(renamesResourceName);
 	}

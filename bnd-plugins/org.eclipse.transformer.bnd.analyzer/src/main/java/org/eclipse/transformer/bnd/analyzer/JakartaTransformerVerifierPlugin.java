@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 import aQute.bnd.service.externalplugin.ExternalPlugin;
 import aQute.bnd.service.verifier.VerifierPlugin;
-import org.eclipse.transformer.jakarta.JakartaTransform;
+import org.eclipse.transformer.jakarta.JakartaOptionsContainer;
 
 /**
  * Bnd Verifier Plugin for Transformer configured with Jakarta rules.
@@ -30,11 +30,11 @@ public class JakartaTransformerVerifierPlugin extends TransformerVerifierPlugin 
 
 	@Override
 	protected Map<String, String> getOptionDefaults() {
-		return JakartaTransform.getOptionDefaults();
+		return JakartaOptionsContainer.doGetOptionDefaults();
 	}
 
 	@Override
 	protected Function<String, URL> getRuleLoader() {
-		return JakartaTransform.getRuleLoader();
+		return JakartaOptionsContainer.doGetRuleLoader();
 	}
 }

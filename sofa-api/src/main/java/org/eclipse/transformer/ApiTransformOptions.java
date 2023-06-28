@@ -1,49 +1,35 @@
-/********************************************************************************
- * Copyright (c) Contributors to the Eclipse Foundation
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
- * which is available at https://www.apache.org/licenses/LICENSE-2.0.
- *
- * SPDX-License-Identifier: (EPL-2.0 OR Apache-2.0)
- ********************************************************************************/
+package org.eclipse.transformer;
 
-package org.eclipse.transformer.maven;
+import org.codehaus.plexus.util.StringUtils;
+import org.eclipse.transformer.jakarta.JakartaOptionsContainer;
+
+import java.net.URL;
+import java.util.*;
+import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
-import java.net.URL;
-import java.util.Collections;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-
-import org.codehaus.plexus.util.StringUtils;
-import org.eclipse.transformer.AppOption;
-import org.eclipse.transformer.TransformOptions;
-import org.eclipse.transformer.jakarta.JakartaOptionsContainer;
-import org.eclipse.transformer.maven.configuration.TransformerRules;
-
-/**
- *
- */
-public class TransformerMojoOptions implements TransformOptions {
-	private final TransformerRules		rules;
+public class ApiTransformOptions implements TransformOptions {
+	private final CustomRules rules;
 	private final Map<String, String>	optionDefaults;
 	private final Function<String, URL>	ruleLoader;
 
-	public TransformerMojoOptions(TransformerRules rules) {
-		this.rules = requireNonNull(rules);
-		if (rules.isJakartaDefaults()) {
-			this.optionDefaults = JakartaOptionsContainer.doGetOptionDefaults();
-			this.ruleLoader = JakartaOptionsContainer.doGetRuleLoader();
-		} else {
+	private final String inputFileName;
+
+	private final String outputFileName;
+
+
+	public ApiTransformOptions(CustomRules customRules, String inputFileName, String outputFileName) {
+		this.rules = requireNonNull(customRules);
+		this.inputFileName = inputFileName;
+		this.outputFileName = outputFileName;
+		if (customRules.getContainerType() == ContainerType.None) {
 			this.optionDefaults = Collections.emptyMap();
 			this.ruleLoader = getClass()::getResource;
+			return;
 		}
+		this.optionDefaults = customRules.getContainerType().getOptionsContainer().getOptionDefaults();
+		this.ruleLoader = customRules.getContainerType().getOptionsContainer().getRuleLoader();
 	}
 
 	private static List<String> condition(List<String> values) {
@@ -130,5 +116,15 @@ public class TransformerMojoOptions implements TransformOptions {
 	@Override
 	public Function<String, URL> getRuleLoader() {
 		return ruleLoader;
+	}
+
+	@Override
+	public String getInputFileName() {
+		return this.inputFileName;
+	}
+
+	@Override
+	public String getOutputFileName() {
+		return this.outputFileName;
 	}
 }
