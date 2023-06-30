@@ -16,7 +16,6 @@
  */
 package org.eclipse.transformer.maven;
 
-import com.alipay.sofa.migration.util.AcrLogUtil;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
@@ -226,7 +225,7 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 			customRules.getImmediates().addAll(immediates);
 		}
 		ApiTransformOptions apiTransformOptions = new ApiTransformOptions(customRules, inputFile, outputFile);
-		return new Transformer(logger,apiTransformOptions);
+		return new Transformer(logger, apiTransformOptions);
 	}
 
 	private String getOutput(String fileName) {
@@ -236,7 +235,7 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 	private String generateFileName(String originFileName, String version) {
 		String replace;
 		if (version.contains("-SNAPSHOT")) {
-			replace = version.split("-SNAPSHOT")[0]+"-" + artifactIdSuffix + "-SNAPSHOT";
+			replace = version.split("-SNAPSHOT")[0] + "-" + artifactIdSuffix + "-SNAPSHOT";
 		} else {
 			replace = version + "-" + artifactIdSuffix;
 		}
