@@ -16,8 +16,6 @@
  */
 package org.eclipse.transformer.maven.configuration;
 
-import com.alipay.sofa.migration.util.AcrLogUtil;
-
 import java.util.List;
 
 /**
@@ -34,9 +32,6 @@ public class JakartaTransformerArtifact {
 	private String       type;
 	private String       classifier;
 	private List<String> excludes;
-
-
-
 
 	private boolean skipSource;
 	private boolean skipJavadoc;

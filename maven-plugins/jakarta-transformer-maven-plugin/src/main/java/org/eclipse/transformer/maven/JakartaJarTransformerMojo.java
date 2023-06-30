@@ -126,6 +126,9 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 		if ("pom".equals(extension)) {
 			return;
 		}
+		if (project.getArtifactId() == null || !match(project.getArtifact())) {
+			return;
+		}
 		//handle pom.xml
 		transformPomFile();
 		//handle jar
@@ -133,6 +136,13 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 		//add transform artifact into project attach artifact
 		addProjectAttachArtifact();
 
+	}
+
+	private boolean match(Artifact artifact) {
+		return artifacts.stream().filter(
+			configArtifact -> configArtifact.getGroupId().equals(artifact.getGroupId()) && configArtifact.getArtifactId()
+				.equals(artifact.getArtifactId()) && (configArtifact.getVersion() != null ? configArtifact.getVersion().equals(
+				artifact.getVersion()) : true)).findAny().isPresent();
 	}
 
 	/**
@@ -207,7 +217,7 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 			return new CustomRulesBuilder()
 				.setBundles(rules.getBundles())
 				.setDirects(rules.getDirects())
-				.setImmediates(rules.getImmediates())
+				.setImmediates(rules.getImmediates() == null ? new ArrayList<>() : rules.getImmediates())
 				.setOverwrite(rules.isOverwrite())
 				.setRenames(rules.getRenames())
 				.setTexts(rules.getTexts())
