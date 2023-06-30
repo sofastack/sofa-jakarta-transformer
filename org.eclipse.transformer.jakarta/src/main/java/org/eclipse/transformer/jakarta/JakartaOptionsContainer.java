@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public class JakartaTransform {
+public class JakartaOptionsContainer implements OptionsContainer {
 
 	public static final String	DEFAULT_SELECTION_REFERENCE		= "jakarta-selection.properties";
 	public static final String	DEFAULT_RENAMES_REFERENCE		= "jakarta-renames.properties";
@@ -25,11 +25,24 @@ public class JakartaTransform {
 	public static final String	DEFAULT_DIRECT_REFERENCE		= "jakarta-direct.properties";
 	public static final String	DEFAULT_MASTER_TEXT_REFERENCE	= "jakarta-text-master.properties";
 
-	public static Function<String, URL> getRuleLoader() {
-		return JakartaTransform.class::getResource;
+	private JakartaOptionsContainer() {
 	}
 
-	public static Map<String, String> getOptionDefaults() {
+	public static final JakartaOptionsContainer JAKARTA_OPTIONS_CONTAINER = new JakartaOptionsContainer();
+
+	public Function<String, URL> getRuleLoader() {
+		return JakartaOptionsContainer.doGetRuleLoader();
+	}
+
+	public Map<String, String> getOptionDefaults() {
+		return doGetOptionDefaults();
+	}
+
+	public static Function<String, URL> doGetRuleLoader() {
+		return JakartaOptionsContainer.class::getResource;
+	}
+
+	public static Map<String, String> doGetOptionDefaults() {
 		Map<String, String> optionDefaults = new HashMap<>();
 
 		optionDefaults.put("selection", DEFAULT_SELECTION_REFERENCE);

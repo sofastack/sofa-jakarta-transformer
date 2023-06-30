@@ -16,7 +16,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 
-import org.eclipse.transformer.jakarta.JakartaTransform;
+import org.eclipse.transformer.jakarta.JakartaOptionsContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,14 +25,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 public class TestLoad {
 
-	public static final String	RULES_RENAMES_PATH	= JakartaTransform.DEFAULT_RENAMES_REFERENCE;
+	public static final String	RULES_RENAMES_PATH	= JakartaOptionsContainer.DEFAULT_RENAMES_REFERENCE;
 
-	public static final String	RULES_VERSIONS_PATH	= JakartaTransform.DEFAULT_VERSIONS_REFERENCE;
+	public static final String	RULES_VERSIONS_PATH	= JakartaOptionsContainer.DEFAULT_VERSIONS_REFERENCE;
 
 	public static final String	TRANSFORMER_PREFIX;
 
 	static {
-		String transformerPackageName = JakartaTransform.class.getPackage()
+		String transformerPackageName = JakartaOptionsContainer.class.getPackage()
 			.getName();
 		TRANSFORMER_PREFIX = transformerPackageName.replace('.', '/') + '/';
 	}
