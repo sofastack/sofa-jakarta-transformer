@@ -28,5 +28,6 @@
 
 	<modules>
 		<module>transformer-maven-plugin</module>
-	</modules>
+        <module>jakarta-transformer-maven-plugin</module>
+    </modules>
 </project>
