@@ -12,16 +12,16 @@ public class CustomRules {
 	private List<String>	directs;
 	private List<String>	texts;
 	private List<String>	perClassConstants;
+	private List<String>	poms;
 	private List<String>	immediates;
 	private boolean			invert;
 	private boolean			overwrite;
 	private boolean			widen;
 	private ContainerType containerType;
 
-	private CustomRules(List<String> selections, List<String> renames, List<String> versions, List<String> bundles,
-						List<String> directs, List<String> texts, List<String> perClassConstants,
-						List<String> immediates, boolean invert, boolean overwrite, boolean widen,
-						ContainerType containerType) {
+	public CustomRules(List<String> selections, List<String> renames, List<String> versions, List<String> bundles, List<String> directs,
+					   List<String> texts, List<String> perClassConstants, List<String> poms, List<String> immediates, boolean invert,
+					   boolean overwrite, boolean widen, ContainerType containerType) {
 		this.selections = selections;
 		this.renames = renames;
 		this.versions = versions;
@@ -29,6 +29,7 @@ public class CustomRules {
 		this.directs = directs;
 		this.texts = texts;
 		this.perClassConstants = perClassConstants;
+		this.poms = poms;
 		this.immediates = immediates;
 		this.invert = invert;
 		this.overwrite = overwrite;
@@ -90,6 +91,14 @@ public class CustomRules {
 
 	public void setPerClassConstants(List<String> perClassConstants) {
 		this.perClassConstants = perClassConstants;
+	}
+
+	public List<String> getPoms() {
+		return poms;
+	}
+
+	public void setPoms(List<String> poms) {
+		this.poms = poms;
 	}
 
 	public List<String> getImmediates() {
@@ -155,6 +164,7 @@ public class CustomRules {
 		private List<String>	directs;
 		private List<String>	texts;
 		private List<String>	perClassConstants;
+		private List<String>	poms;
 		private List<String>	immediates;
 		private boolean			invert;
 		private boolean			overwrite;
@@ -165,7 +175,7 @@ public class CustomRules {
 		}
 
 		public CustomRules build() {
-			return new CustomRules(selections, renames, versions, bundles, directs, texts, perClassConstants,
+			return new CustomRules(selections, renames, versions, bundles, directs, texts, perClassConstants, poms,
 				immediates, invert, overwrite, widen, containerType);
 		}
 
@@ -201,6 +211,11 @@ public class CustomRules {
 
 		public CustomRulesBuilder setPerClassConstants(List<String> perClassConstants) {
 			this.perClassConstants = perClassConstants;
+			return this;
+		}
+
+		public CustomRulesBuilder setPoms(List<String> poms) {
+			this.poms = poms;
 			return this;
 		}
 

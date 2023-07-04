@@ -221,6 +221,7 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 				.setOverwrite(rules.isOverwrite())
 				.setRenames(rules.getRenames())
 				.setTexts(rules.getTexts())
+				.setPoms(rules.getPoms())
 				.setContainerType(ContainerType.Jakarta)
 				.setPerClassConstants(rules.getPerClassConstants())
 				.setInvert(rules.isInvert())

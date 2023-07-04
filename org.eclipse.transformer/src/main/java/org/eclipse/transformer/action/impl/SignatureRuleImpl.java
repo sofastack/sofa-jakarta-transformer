@@ -42,6 +42,7 @@ import aQute.bnd.signatures.TypeParameter;
 import aQute.bnd.signatures.TypeVariableSignature;
 import aQute.bnd.stream.MapStream;
 import aQute.libg.glob.Glob;
+import org.apache.maven.model.Model;
 import org.eclipse.transformer.action.BundleData;
 import org.eclipse.transformer.action.SignatureRule;
 import org.eclipse.transformer.util.FileUtils;
@@ -55,7 +56,7 @@ public class SignatureRuleImpl implements SignatureRule {
 		Map<String, String> packageVersions, Map<String, Map<String, String>> specificPackageVersions,
 		Map<String, BundleData> bundleUpdates,
 		Map<String, Map<String, String>> masterTextUpdates, Map<String, String> directStrings,
-		Map<String, Map<String, String>> perClassDirectStrings) {
+		Map<String, Map<String, String>> perClassDirectStrings, Map<String, Map<Model, Model>> pomUpdates) {
 
 		this.logger = logger;
 
@@ -172,6 +173,13 @@ public class SignatureRuleImpl implements SignatureRule {
 			}
 		}
 		this.perClassDirectStrings = usePerClassDirectStrings;
+
+		if (pomUpdates.isEmpty()) {
+			this.pomUpdates = null;
+		}
+		else {
+			this.pomUpdates = pomUpdates;
+		}
 
 		//
 
@@ -307,6 +315,11 @@ public class SignatureRuleImpl implements SignatureRule {
 
 	protected final Map<String, Map<String, String>>	specificPackageVersions;
 
+	protected final Map<String, Map<Model, Model>>	pomUpdates;
+
+
+
+
 	@Override
 	public Map<String, String> getPackageVersions() {
 		return packageVersions;
@@ -315,6 +328,11 @@ public class SignatureRuleImpl implements SignatureRule {
 	@Override
 	public Map<String, Map<String, String>> getSpecificPackageVersions() {
 		return specificPackageVersions;
+	}
+
+	@Override
+	public Map<String, Map<Model, Model>> getPomUpdates() {
+		return pomUpdates;
 	}
 
 	@Override
@@ -832,6 +850,11 @@ public class SignatureRuleImpl implements SignatureRule {
 		}
 
 		return finalSignature;
+	}
+
+	@Override
+	public String transformModel(Model originModel) {
+		return null;
 	}
 
 	private ClassSignature transform(ClassSignature classSignature) {

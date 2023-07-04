@@ -66,6 +66,6 @@ public class CaptureTest {
 		Map<String, Map<String, String>> perClass) {
 
 		return new SignatureRuleImpl(useLogger, usePackageRenames, usePackageVersions, null,
-					bundleData, null, directStrings, perClass);
+					bundleData, null, directStrings, perClass, null);
 	}
 }

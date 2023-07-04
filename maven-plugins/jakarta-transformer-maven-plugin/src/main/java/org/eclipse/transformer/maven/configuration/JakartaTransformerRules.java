@@ -32,6 +32,9 @@ public class JakartaTransformerRules {
 	private List<String> directs;
 	private List<String> texts;
 	private List<String> perClassConstants;
+
+	private List<String> poms;
+
 	private List<String> immediates;
 	private boolean      invert;
 	private boolean      overwrite = true;
@@ -91,6 +94,14 @@ public class JakartaTransformerRules {
 
 	public void setPerClassConstants(List<String> perClassConstants) {
 		this.perClassConstants = perClassConstants;
+	}
+
+	public List<String> getPoms() {
+		return poms;
+	}
+
+	public void setPoms(List<String> poms) {
+		this.poms = poms;
 	}
 
 	public List<String> getImmediates() {

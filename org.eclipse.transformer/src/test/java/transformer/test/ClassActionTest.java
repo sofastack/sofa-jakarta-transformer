@@ -122,7 +122,7 @@ public class ClassActionTest {
 
 		ActionContext context = new ActionContextImpl(logger,
 			new SelectionRuleImpl(logger, Collections.emptyMap(), Collections.emptyMap()),
-			new SignatureRuleImpl(logger, renames, null, null, null, null, null, Collections.emptyMap()));
+			new SignatureRuleImpl(logger, renames, null, null, null, null, null, Collections.emptyMap(), null));
 		ClassActionImpl classAction = new ClassActionImpl(context);
 
 		ByteData outputData = classAction.apply(inputData);
@@ -218,7 +218,7 @@ public class ClassActionTest {
 		renames.put("original.member", "transformed.member");
 		ActionContext context = new ActionContextImpl(logger,
 			new SelectionRuleImpl(logger, Collections.emptyMap(), Collections.emptyMap()),
-			new SignatureRuleImpl(logger, renames, null, null, null, null, null, Collections.emptyMap()));
+			new SignatureRuleImpl(logger, renames, null, null, null, null, null, Collections.emptyMap(), null));
 
 		ClassActionImpl classAction = new ClassActionImpl(context);
 		ByteData outputData = classAction.apply(inputData);
@@ -262,7 +262,7 @@ public class ClassActionTest {
 		renames.put("original.result", "transformed.result");
 		ActionContext context = new ActionContextImpl(logger,
 			new SelectionRuleImpl(logger, Collections.emptyMap(), Collections.emptyMap()),
-			new SignatureRuleImpl(logger, renames, null, null, null, null, null, Collections.emptyMap()));
+			new SignatureRuleImpl(logger, renames, null, null, null, null, null, Collections.emptyMap(), null));
 		ClassActionImpl classAction = new ClassActionImpl(context);
 		ByteData outputData = classAction.apply(inputData);
 

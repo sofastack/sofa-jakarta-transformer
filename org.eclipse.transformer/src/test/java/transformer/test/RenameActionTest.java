@@ -50,7 +50,8 @@ class RenameActionTest {
 	void relocate_resource() {
 		ActionContext context = new ActionContextImpl(logger,
 			new SelectionRuleImpl(logger, Collections.emptyMap(), Collections.emptyMap()), new SignatureRuleImpl(logger,
-				Maps.of("com.a.b.*", "com.shaded.a.b"), null, null, null, null, null, Collections.emptyMap()));
+				Maps.of("com.a.b.*", "com.shaded.a.b"), null, null,
+			null, null, null, Collections.emptyMap(), null));
 		RenameActionImpl action = new RenameActionImpl(context);
 
 		assertThat(action.relocateResource("a/b/c/packageinfo")).isEqualTo("a/b/c/packageinfo");

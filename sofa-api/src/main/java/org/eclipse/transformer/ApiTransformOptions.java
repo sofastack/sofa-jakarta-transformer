@@ -75,6 +75,9 @@ public class ApiTransformOptions implements TransformOptions {
 			case RULES_VERSIONS :
 				values = rules.getVersions();
 				break;
+			case RULES_POM:
+				values = rules.getPoms();
+				break;
 			default :
 				values = null;
 				break;

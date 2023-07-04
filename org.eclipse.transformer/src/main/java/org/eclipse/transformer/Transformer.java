@@ -27,8 +27,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -37,6 +39,10 @@ import aQute.bnd.unmodifiable.Sets;
 import aQute.lib.io.IO;
 import aQute.lib.strings.Strings;
 import aQute.libg.uri.URIUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Model;
 import org.eclipse.transformer.action.Action;
 import org.eclipse.transformer.action.ActionContext;
 import org.eclipse.transformer.action.ActionSelector;
@@ -55,6 +61,7 @@ import org.eclipse.transformer.action.impl.DirectoryActionImpl;
 import org.eclipse.transformer.action.impl.JSPActionImpl;
 import org.eclipse.transformer.action.impl.JavaActionImpl;
 import org.eclipse.transformer.action.impl.ManifestActionImpl;
+import org.eclipse.transformer.action.impl.PomActionImpl;
 import org.eclipse.transformer.action.impl.PropertiesActionImpl;
 import org.eclipse.transformer.action.impl.RenameActionImpl;
 import org.eclipse.transformer.action.impl.SelectionRuleImpl;
@@ -120,6 +127,8 @@ public class Transformer {
 	public Map<String, String>				masterSubstitutionRefs;
 	public Map<String, Map<String, String>>	masterTextUpdates;
 	// ( pattern -> ( initial-> final ) )
+
+	public Map<String, Map<Model, Model>>	pomUpdates;
 
 	public Map<String, String>				directStrings;
 
@@ -320,6 +329,7 @@ public class Transformer {
 		Map<String, String> textMasterProperties = loadProperties(AppOption.RULES_MASTER_TEXT, null);
 		Map<String, String> perClassConstantProperties = loadProperties(AppOption.RULES_PER_CLASS_CONSTANT,
 			null);
+		Map<String, Map<Model, Model>> pomUpdateRules = loadRules4Pom(AppOption.RULES_POM);
 
 		invert = options.hasOption(AppOption.INVERT);
 
@@ -420,6 +430,14 @@ public class Transformer {
 		} else {
 			perClassConstantStrings = null;
 			getLogger().debug(consoleMarker, "Per class constant mapping files are not enabled");
+		}
+
+		if (!pomUpdateRules.isEmpty()) {
+			pomUpdates = pomUpdateRules;
+		}
+		else {
+			pomUpdates = null;
+			getLogger().debug(consoleMarker, "Pom.xml updates will not be performed");
 		}
 
 		processImmediateData(immediateData, masterTextRef, orphanedFinalPackages);
@@ -602,6 +620,71 @@ public class Transformer {
 			});
 		return mergedProperties;
 	}
+
+	public Map<String, Map<Model, Model>> loadRules4Pom(AppOption ruleOption) {
+		List<String> rulesReferences = options.normalize(options.getOptionValues(ruleOption));
+		if (rulesReferences == null || rulesReferences.isEmpty()) {
+			return new HashMap<>();
+		}
+		ObjectMapper mapper = new ObjectMapper();
+		Map<String, Map<Model, Model>> mergedRules = rulesReferences.stream()
+			.reduce(new HashMap<>(), asBiFunction((rule, ref) -> {
+				JsonNode rootNode = mapper.readTree(new File(ref));
+				Iterator<Entry<String, JsonNode>> it = rootNode.fields();
+				while (it.hasNext()) {
+					Entry<String, JsonNode> entry = it.next();
+					Map<Model, Model> modelMap = convert2ModelMap(entry);
+					if (modelMap.isEmpty()) {
+						continue;
+					}
+					if (!rule.containsKey(entry.getKey())) {
+						rule.put(entry.getKey(), modelMap);
+						continue;
+					}
+					rule.get(entry.getKey()).putAll(modelMap);
+				}
+				return rule;
+			}), (rule1, rule2) -> {
+				rule2.forEach((key, value) -> {
+					if (!rule1.containsKey(key)) {
+						rule1.put(key, value);
+					}
+					else {
+						rule1.get(key).putAll(value);
+					}
+				});
+				return rule1;
+			});
+		return mergedRules;
+	}
+
+	private Map<Model, Model> convert2ModelMap(Entry<String, JsonNode> entry) {
+		Map<Model, Model> map = new HashMap<>();
+		switch (entry.getKey()) {
+			case "dependencies":
+				for (JsonNode child: entry.getValue()) {
+					Model originModel = new Model();
+					Model targetModel = new Model();
+					Dependency originDependency = new Dependency();
+					originDependency.setGroupId(child.get("groupId").asText());
+					originDependency.setArtifactId(child.get("artifactId").asText());
+					originDependency.setVersion(child.get("version").asText());
+					Dependency targetDependency = new Dependency();
+					targetDependency.setGroupId(child.get("targetGroupId").asText());
+					targetDependency.setArtifactId(child.get("targetArtifactId").asText());
+					targetDependency.setVersion(child.get("targetVersion").asText());
+					originModel.getDependencies().add(originDependency);
+					targetModel.getDependencies().add(targetDependency);
+					map.put(originModel, targetModel);
+				}
+				break;
+			default:
+				getLogger().warn("Unsupported key: {}", entry.getKey());
+		}
+		return map;
+	}
+
+
 
 	private static final URI EMPTYURI = URI.create("");
 
@@ -961,7 +1044,7 @@ public class Transformer {
 				getLogger(),
 				packageRenames, packageVersions, specificPackageVersions,
 				bundleUpdates,
-				masterTextUpdates, directStrings, perClassConstantStrings);
+				masterTextUpdates, directStrings, perClassConstantStrings, pomUpdates);
 		}
 		return signatureRules;
 	}
@@ -1123,11 +1206,13 @@ public class Transformer {
 			Action textAction = useSelector.addUsing(TextActionImpl::new, context);
 			Action xmlAction = useSelector.addUsing(XmlActionImpl::new, context);
 			Action propertiesAction = useSelector.addUsing(PropertiesActionImpl::new, context);
+			Action pomAction = useSelector.addUsing(PomActionImpl::new, context);
 
 			List<Action> standardActions = new ArrayList<>();
 			standardActions.add(classAction);
 			standardActions.add(javaAction); // before text
 			standardActions.add(jspAction); // before text
+			standardActions.add(pomAction); // before text
 			standardActions.add(serviceConfigAction);
 			standardActions.add(manifestAction);
 			standardActions.add(featureAction);

@@ -72,21 +72,29 @@ public class SimpleExample {
 	 * "javax.batch.api.chunk=xxx.batch.api.chunk"
 	 * */
 	public static CustomRules customJakartaTransform() {
-		List<String> immediatesList = new ArrayList<>(Arrays.asList(
-			"tr", "javax.servlet", "xxx.servlet", "tr", "javax.servlet.http", "xxx.servlet.http"));
+		//List<String> immediatesList = new ArrayList<>(Arrays.asList(
+		//	"tr", "javax.servlet", "xxx.servlet", "tr", "javax.servlet.http", "xxx.servlet.http"));
+		//
+		//List<String> renameList = new ArrayList<>(Arrays.asList(
+		//	"alipay-api/src/main/resources/jakarta-renames-test1.properties",
+		//	"alipay-api/src/main/resources/jakarta-renames-test2.properties"));
+		//
+		//List<String> textList = new ArrayList<>(Collections.singleton(
+		//	"org.eclipse.transformer.jakarta/src/main/resources/org/" +
+		//		"eclipse/transformer/jakarta/jakarta-text-master.properties"));
+		//
+		//return new CustomRules.CustomRulesBuilder()
+		//	.setImmediates(immediatesList)
+		//	.setRenames(renameList)
+		//	.setTexts(textList)
+		//	.setContainerType(ContainerType.Jakarta)
+		//	.build();
 
-		List<String> renameList = new ArrayList<>(Arrays.asList(
-			"alipay-api/src/main/resources/jakarta-renames-test1.properties",
-			"alipay-api/src/main/resources/jakarta-renames-test2.properties"));
-
-		List<String> textList = new ArrayList<>(Collections.singleton(
-			"org.eclipse.transformer.jakarta/src/main/resources/org/" +
-				"eclipse/transformer/jakarta/jakarta-text-master.properties"));
+		List<String> pomList = new ArrayList<>(Arrays.asList(
+			"/Users/zzh/Documents/jars/test.json"));
 
 		return new CustomRules.CustomRulesBuilder()
-			.setImmediates(immediatesList)
-			.setRenames(renameList)
-			.setTexts(textList)
+			.setPoms(pomList)
 			.setContainerType(ContainerType.Jakarta)
 			.build();
 	}
@@ -103,8 +111,8 @@ public class SimpleExample {
 	public static void main(String[] args) {
 
 		ApiTransformOptions options = new ApiTransformOptions(customJakartaTransform(),
-			"/Users/someone/Documents/jars/xxx.jar",
-			"/Users/someone/Documents/xxx.jar");
+			"/Users/zzh/Documents/jars/buservice-sdk-1.0.0.20230608.jar",
+			"/Users/zzh/Documents/buservice-sdk-1.0.0.20230608-jakarta.jar");
 
 		Transformer transformer = new Transformer(options);
 		Transformer.ResultCode rc = transformer.run();
