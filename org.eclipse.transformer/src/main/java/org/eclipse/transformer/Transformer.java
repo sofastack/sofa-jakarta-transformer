@@ -495,7 +495,8 @@ public class Transformer {
 				case RULES_MASTER_TEXT:
 					addImmediateMasterText(masterTextRef, nextData.key, nextData.value);
 					break;
-
+				// We do not support using immediate rules to add pom rules because
+				// pom rules are too complex to describe.
 				default:
 					getLogger().error(consoleMarker, "Unrecognized immediate data target [ {} ]", nextData.target);
 			}
@@ -621,6 +622,11 @@ public class Transformer {
 		return mergedProperties;
 	}
 
+	/**
+	 * Load pom rules from json files. In order to better support the transformation
+	 * of the other parts of pom.xml in the future, we use a {@link Model} to
+	 * describe a pom update rule.
+	 * */
 	public Map<String, Map<Model, Model>> loadRules4Pom(AppOption ruleOption) {
 		List<String> rulesReferences = options.normalize(options.getOptionValues(ruleOption));
 		if (rulesReferences == null || rulesReferences.isEmpty()) {
@@ -629,20 +635,7 @@ public class Transformer {
 		ObjectMapper mapper = new ObjectMapper();
 		Map<String, Map<Model, Model>> mergedRules = rulesReferences.stream()
 			.reduce(new HashMap<>(), asBiFunction((rule, ref) -> {
-				JsonNode rootNode = mapper.readTree(new File(ref));
-				Iterator<Entry<String, JsonNode>> it = rootNode.fields();
-				while (it.hasNext()) {
-					Entry<String, JsonNode> entry = it.next();
-					Map<Model, Model> modelMap = convert2ModelMap(entry);
-					if (modelMap.isEmpty()) {
-						continue;
-					}
-					if (!rule.containsKey(entry.getKey())) {
-						rule.put(entry.getKey(), modelMap);
-						continue;
-					}
-					rule.get(entry.getKey()).putAll(modelMap);
-				}
+				loadAndMerge(rule, mapper, ref);
 				return rule;
 			}), (rule1, rule2) -> {
 				rule2.forEach((key, value) -> {
@@ -658,23 +651,55 @@ public class Transformer {
 		return mergedRules;
 	}
 
+	private void loadAndMerge(HashMap<String, Map<Model, Model>> rule, ObjectMapper mapper, String ref) throws IOException {
+		JsonNode rootNode = mapper.readTree(new File(ref));
+		Iterator<Entry<String, JsonNode>> it = rootNode.fields();
+		while (it.hasNext()) {
+			Entry<String, JsonNode> entry = it.next();
+			Map<Model, Model> modelMap = convert2ModelMap(entry);
+			if (modelMap.isEmpty()) {
+				continue;
+			}
+			if (!rule.containsKey(entry.getKey())) {
+				rule.put(entry.getKey(), modelMap);
+				continue;
+			}
+			rule.get(entry.getKey()).putAll(modelMap);
+		}
+	}
+
 	private Map<Model, Model> convert2ModelMap(Entry<String, JsonNode> entry) {
 		Map<Model, Model> map = new HashMap<>();
-		switch (entry.getKey()) {
-			case "dependencies":
+		switch (PomType.getByName(entry.getKey())) {
+			case DEPENDENCIES:
 				for (JsonNode child: entry.getValue()) {
 					Model originModel = new Model();
 					Model targetModel = new Model();
+
 					Dependency originDependency = new Dependency();
 					originDependency.setGroupId(child.get("groupId").asText());
 					originDependency.setArtifactId(child.get("artifactId").asText());
 					originDependency.setVersion(child.get("version").asText());
+
 					Dependency targetDependency = new Dependency();
 					targetDependency.setGroupId(child.get("targetGroupId").asText());
 					targetDependency.setArtifactId(child.get("targetArtifactId").asText());
 					targetDependency.setVersion(child.get("targetVersion").asText());
+
 					originModel.getDependencies().add(originDependency);
 					targetModel.getDependencies().add(targetDependency);
+					map.put(originModel, targetModel);
+				}
+				break;
+			case MODULES:
+				for (JsonNode child: entry.getValue()) {
+					Model originModel = new Model();
+					Model targetModel = new Model();
+					originModel.setGroupId(child.get("groupId").asText());
+					originModel.setArtifactId(child.get("artifactId").asText());
+					targetModel.setGroupId(child.get("targetGroupId").asText());
+					targetModel.setArtifactId(child.get("targetArtifactId").asText());
+					targetModel.setVersion(child.get("targetVersion").asText());
 					map.put(originModel, targetModel);
 				}
 				break;

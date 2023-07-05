@@ -4,6 +4,7 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.eclipse.transformer.PomType;
 import org.eclipse.transformer.TransformException;
 import org.eclipse.transformer.action.ActionContext;
 import org.eclipse.transformer.action.ActionType;
@@ -66,6 +67,8 @@ public class PomActionImpl extends ElementActionImpl {
 		try {
 			model = mavenXpp3Reader.read(inputData.reader());
 
+			transformModuleGAV(model);
+
 			transformDependency(model,inputData.name());
 
 			MavenXpp3Writer mavenXpp3Writer = new MavenXpp3Writer();
@@ -84,7 +87,7 @@ public class PomActionImpl extends ElementActionImpl {
 	}
 
 	private void transformDependency(Model model, String inputName) {
-		Map<Model, Model> dependenciesMap = getSignatureRule().getPomUpdates().get("dependencies");
+		Map<Model, Model> dependenciesMap = getSignatureRule().getPomUpdates().get(PomType.DEPENDENCIES.getName());
 		model.getDependencies().forEach((dependency -> {
 			boolean hasChanged = false;
 			for (Entry<Model, Model> entry: dependenciesMap.entrySet()) {
@@ -110,5 +113,18 @@ public class PomActionImpl extends ElementActionImpl {
 				addReplacement();
 			}
 		}));
+	}
+
+	private void transformModuleGAV(Model model) {
+		Map<Model, Model> modulesMap = getSignatureRule().getPomUpdates().get(PomType.MODULES.getName());
+		for (Entry<Model, Model> entry: modulesMap.entrySet()) {
+			if (entry.getKey().getGroupId().equals(model.getGroupId()) && entry.getKey().getArtifactId().equals(model.getArtifactId())) {
+				model.setGroupId(entry.getValue().getGroupId());
+				model.setArtifactId(entry.getValue().getArtifactId());
+				model.setVersion(entry.getValue().getVersion());
+				addReplacement();
+				break;
+			}
+		}
 	}
 }

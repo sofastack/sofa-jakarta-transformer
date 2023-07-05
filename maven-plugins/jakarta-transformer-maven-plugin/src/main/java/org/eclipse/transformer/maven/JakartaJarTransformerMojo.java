@@ -16,9 +16,13 @@
  */
 package org.eclipse.transformer.maven;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
+import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Model;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -42,10 +46,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Transforms a specified artifact into a new artifact for install and deploy phase.
@@ -113,11 +122,16 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 
 	private List<Artifact> transformedArtifacts = new ArrayList<>();
 
+	private JsonNode moduleConfig;
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (isSkip()) {
 			logger.info("jakarta transform skipped");
 			return;
 		}
+
+
+
 		String extension = artifactHandlerManager.getArtifactHandler(project.getPackaging()).getExtension();
 		if (artifacts == null || artifacts.isEmpty()) {
 			logger.info("jakarta transform skipped for no artifacts config");
@@ -126,7 +140,12 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 		if ("pom".equals(extension)) {
 			return;
 		}
-		if (project.getArtifactId() == null || !match(project.getArtifact())) {
+		try {
+			moduleConfig = match(project.getArtifact());
+		} catch (IOException e) {
+			throw new MojoExecutionException("xxx");
+		}
+		if (project.getArtifactId() == null || moduleConfig == null) {
 			return;
 		}
 		//handle pom.xml
@@ -138,11 +157,17 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 
 	}
 
-	private boolean match(Artifact artifact) {
-		return artifacts.stream().filter(
-			configArtifact -> configArtifact.getGroupId().equals(artifact.getGroupId()) && configArtifact.getArtifactId()
-				.equals(artifact.getArtifactId()) && (configArtifact.getVersion() != null ? configArtifact.getVersion().equals(
-				artifact.getVersion()) : true)).findAny().isPresent();
+	private JsonNode match(Artifact artifact) throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode rootNode = mapper.readTree(new File(rules.getPom()));
+		JsonNode moduleNode = rootNode.get("modules");
+		for (JsonNode child: moduleNode) {
+			if (child.get("groupId").asText().equals(artifact.getGroupId()) &&
+				child.get("artifactId").asText().equals(artifact.getArtifactId())) {
+				return child;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -151,7 +176,7 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 	private void transformPomFile() {
 		File file = project.getFile();
 		if (isFile(file)) {
-			String transformedFileName = generateFileName(file.getName(), project.getVersion());
+			String transformedFileName = generateFileName(file.getName());
 			String transformedFile = getOutput(transformedFileName);
 			String transformedArtifactId = transformArtifactId(project.getArtifactId());
 			List<String> artifactIdRule = Arrays.asList("td", project.getArtifactId(), transformedArtifactId);
@@ -183,7 +208,7 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 	private void doTransformJar(Artifact artifact) {
 		File file = artifact.getFile();
 		if (isFile(file)) {
-			String transformedFileName = generateFileName(file.getName(), project.getVersion());
+			String transformedFileName = generateFileName(file.getName());
 			String transformedFile = getOutput(transformedFileName);
 			String transformedArtifactId = transformArtifactId(project.getArtifactId());
 			Transformer transformer = buildTransformer(file.getAbsolutePath(), transformedFile, null);
@@ -221,7 +246,7 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 				.setOverwrite(rules.isOverwrite())
 				.setRenames(rules.getRenames())
 				.setTexts(rules.getTexts())
-				.setPoms(rules.getPoms())
+				.setPoms(Collections.singletonList(rules.getPom()))
 				.setContainerType(ContainerType.Jakarta)
 				.setPerClassConstants(rules.getPerClassConstants())
 				.setInvert(rules.isInvert())
@@ -255,6 +280,12 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 		} else {
 			return originFileName;
 		}
+	}
+
+	private String generateFileName(String name) {
+		return moduleConfig.get("targetGroupId").asText() + moduleConfig.get("targetArtifactId").asText()
+			+ moduleConfig.get("targetVersion").asText() + name.substring(name.lastIndexOf("."));
+
 	}
 
 	private String transformArtifactId(String artifactId) {
