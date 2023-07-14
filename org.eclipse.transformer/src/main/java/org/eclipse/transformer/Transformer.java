@@ -673,18 +673,20 @@ public class Transformer {
 		switch (PomType.getByName(entry.getKey())) {
 			case DEPENDENCIES:
 				for (JsonNode child: entry.getValue()) {
+					if (!child.hasNonNull("groupId") || !child.hasNonNull("artifactId")) {
+						continue;
+					}
 					Model originModel = new Model();
 					Model targetModel = new Model();
 
 					Dependency originDependency = new Dependency();
 					originDependency.setGroupId(child.get("groupId").asText());
 					originDependency.setArtifactId(child.get("artifactId").asText());
-					originDependency.setVersion(child.get("version").asText());
 
 					Dependency targetDependency = new Dependency();
-					targetDependency.setGroupId(child.get("targetGroupId").asText());
-					targetDependency.setArtifactId(child.get("targetArtifactId").asText());
-					targetDependency.setVersion(child.get("targetVersion").asText());
+					targetDependency.setGroupId(child.hasNonNull("targetGroupId") ? child.get("targetGroupId").asText() : null);
+					targetDependency.setArtifactId(child.hasNonNull("targetArtifactId") ? child.get("targetArtifactId").asText() : null);
+					targetDependency.setVersion(child.hasNonNull("targetVersion") ? child.get("targetVersion").asText() : null);
 
 					originModel.getDependencies().add(originDependency);
 					targetModel.getDependencies().add(targetDependency);
@@ -693,13 +695,18 @@ public class Transformer {
 				break;
 			case MODULES:
 				for (JsonNode child: entry.getValue()) {
+					if (!child.hasNonNull("groupId") || !child.hasNonNull("artifactId")) {
+						continue;
+					}
+
 					Model originModel = new Model();
 					Model targetModel = new Model();
 					originModel.setGroupId(child.get("groupId").asText());
 					originModel.setArtifactId(child.get("artifactId").asText());
-					targetModel.setGroupId(child.get("targetGroupId").asText());
-					targetModel.setArtifactId(child.get("targetArtifactId").asText());
-					targetModel.setVersion(child.get("targetVersion").asText());
+
+					targetModel.setGroupId(child.hasNonNull("targetGroupId") ? child.get("targetGroupId").asText() : null);
+					targetModel.setArtifactId(child.hasNonNull("targetArtifactId") ? child.get("targetArtifactId").asText() : null);
+					targetModel.setVersion(child.hasNonNull("targetVersion") ? child.get("targetVersion").asText() : null);
 					map.put(originModel, targetModel);
 				}
 				break;
@@ -1225,13 +1232,13 @@ public class Transformer {
 			// The java and JSP actions must be before the text action.
 			Action javaAction = useSelector.addUsing(JavaActionImpl::new, context);
 			Action jspAction = useSelector.addUsing(JSPActionImpl::new, context);
+			Action pomAction = useSelector.addUsing(PomActionImpl::new, context);
 			Action serviceConfigAction = useSelector.addUsing(ServiceLoaderConfigActionImpl::new, context);
 			Action manifestAction = useSelector.addUsing(c -> new ManifestActionImpl(c, ActionType.MANIFEST), context);
 			Action featureAction = useSelector.addUsing(c -> new ManifestActionImpl(c, ActionType.FEATURE), context);
 			Action textAction = useSelector.addUsing(TextActionImpl::new, context);
 			Action xmlAction = useSelector.addUsing(XmlActionImpl::new, context);
 			Action propertiesAction = useSelector.addUsing(PropertiesActionImpl::new, context);
-			Action pomAction = useSelector.addUsing(PomActionImpl::new, context);
 
 			List<Action> standardActions = new ArrayList<>();
 			standardActions.add(classAction);
@@ -1350,8 +1357,10 @@ public class Transformer {
 	public void transform() throws TransformException {
 		acceptedAction.apply(inputName, inputFile, outputName, outputFile);
 
-		acceptedAction.getLastActiveChanges()
-			.log(getLogger(), inputPath, outputPath);
+		if (!inputName.endsWith(".xml")) {
+			acceptedAction.getLastActiveChanges()
+				.log(getLogger(), inputPath, outputPath);
+		}
 	}
 
 	public Changes getLastActiveChanges() {

@@ -174,7 +174,7 @@ public class SignatureRuleImpl implements SignatureRule {
 		}
 		this.perClassDirectStrings = usePerClassDirectStrings;
 
-		if (pomUpdates.isEmpty()) {
+		if (pomUpdates == null || pomUpdates.isEmpty()) {
 			this.pomUpdates = null;
 		}
 		else {

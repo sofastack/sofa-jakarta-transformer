@@ -45,7 +45,7 @@ public class PomActionImpl extends ElementActionImpl {
 
 	@Override
 	public boolean acceptResource(String resourceName, File resourceFile) {
-		return resourceName.endsWith("pom.xml");
+		return resourceName.endsWith("pom.xml") || resourceName.endsWith(".pom");
 	}
 
 	protected List<StringReplacement> createActiveReplacements(SignatureRule signatureRule) {
@@ -93,11 +93,11 @@ public class PomActionImpl extends ElementActionImpl {
 			for (Entry<Model, Model> entry: dependenciesMap.entrySet()) {
 				Dependency currentKey = entry.getKey().getDependencies().get(0);
 				Dependency currentValue = entry.getValue().getDependencies().get(0);
-				if (currentKey.getGroupId().equals(dependency.getGroupId()) && currentKey.getArtifactId().equals(dependency.getArtifactId())
-					&& currentKey.getVersion().equals(dependency.getVersion())) {
-					dependency.setGroupId(currentValue.getGroupId());
-					dependency.setArtifactId(currentValue.getArtifactId());
-					dependency.setVersion(currentValue.getVersion());
+				if (currentKey.getGroupId().equals(dependency.getGroupId()) &&
+					currentKey.getArtifactId().equals(dependency.getArtifactId())) {
+					dependency.setGroupId(currentValue.getGroupId() == null ? dependency.getGroupId() : currentValue.getGroupId());
+					dependency.setArtifactId(currentValue.getArtifactId() == null ? dependency.getArtifactId() : currentValue.getArtifactId());
+					dependency.setVersion(currentValue.getVersion() == null ? dependency.getVersion() : currentValue.getVersion());
 					hasChanged = true;
 					addReplacement();
 					break;
@@ -118,10 +118,10 @@ public class PomActionImpl extends ElementActionImpl {
 	private void transformModuleGAV(Model model) {
 		Map<Model, Model> modulesMap = getSignatureRule().getPomUpdates().get(PomType.MODULES.getName());
 		for (Entry<Model, Model> entry: modulesMap.entrySet()) {
-			if (entry.getKey().getGroupId().equals(model.getGroupId()) && entry.getKey().getArtifactId().equals(model.getArtifactId())) {
-				model.setGroupId(entry.getValue().getGroupId());
-				model.setArtifactId(entry.getValue().getArtifactId());
-				model.setVersion(entry.getValue().getVersion());
+			if (entry.getKey().getArtifactId().equals(model.getArtifactId())) {
+				model.setGroupId(entry.getValue().getGroupId() == null ? model.getGroupId() : entry.getValue().getGroupId());
+				model.setArtifactId(entry.getValue().getArtifactId() == null ? model.getArtifactId() : entry.getValue().getArtifactId());
+				model.setVersion(entry.getValue().getVersion() == null ? model.getVersion() : entry.getValue().getVersion());
 				addReplacement();
 				break;
 			}
