@@ -13,6 +13,7 @@ package org.eclipse.transformer;
 
 import static aQute.bnd.exceptions.BiFunctionWithException.asBiFunction;
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.transformer.PomConstants.*;
 import static org.eclipse.transformer.util.FileUtils.DEFAULT_CHARSET;
 
 import java.io.File;
@@ -558,8 +559,8 @@ public class Transformer {
 		BundleData newBundleData = new BundleDataImpl(value);
 		BundleData oldBundleData = bundleUpdates.put(bundleId, newBundleData);
 		if ( oldBundleData != null ) {
-			logMerge("immediate bundle data", "bundle data", bundleId, oldBundleData.getPrintString(),
-				newBundleData.getPrintString());
+			logMerge("immediate bundle data", "bundle data", bundleId,
+				oldBundleData.getPrintString(), newBundleData.getPrintString());
 		}
 	}
 
@@ -651,7 +652,8 @@ public class Transformer {
 		return mergedRules;
 	}
 
-	private void loadAndMerge(HashMap<String, Map<Model, Model>> rule, ObjectMapper mapper, String ref) throws IOException {
+	private void loadAndMerge(HashMap<String, Map<Model, Model>> rule, ObjectMapper mapper, String ref)
+		throws IOException {
 		JsonNode rootNode = mapper.readTree(new File(ref));
 		Iterator<Entry<String, JsonNode>> it = rootNode.fields();
 		while (it.hasNext()) {
@@ -673,20 +675,23 @@ public class Transformer {
 		switch (PomType.getByName(entry.getKey())) {
 			case DEPENDENCIES:
 				for (JsonNode child: entry.getValue()) {
-					if (!child.hasNonNull("groupId") || !child.hasNonNull("artifactId")) {
+					if (!child.hasNonNull(GROUP_ID) || !child.hasNonNull(ARTIFACT_ID)) {
 						continue;
 					}
 					Model originModel = new Model();
 					Model targetModel = new Model();
 
 					Dependency originDependency = new Dependency();
-					originDependency.setGroupId(child.get("groupId").asText());
-					originDependency.setArtifactId(child.get("artifactId").asText());
+					originDependency.setGroupId(child.get(GROUP_ID).asText());
+					originDependency.setArtifactId(child.get(ARTIFACT_ID).asText());
 
 					Dependency targetDependency = new Dependency();
-					targetDependency.setGroupId(child.hasNonNull("targetGroupId") ? child.get("targetGroupId").asText() : null);
-					targetDependency.setArtifactId(child.hasNonNull("targetArtifactId") ? child.get("targetArtifactId").asText() : null);
-					targetDependency.setVersion(child.hasNonNull("targetVersion") ? child.get("targetVersion").asText() : null);
+					targetDependency.setGroupId(child.hasNonNull(TARGET_GROUP_ID) ?
+						child.get(TARGET_GROUP_ID).asText() : null);
+					targetDependency.setArtifactId(child.hasNonNull(TARGET_ARTIFACT_ID) ?
+						child.get(TARGET_ARTIFACT_ID).asText() : null);
+					targetDependency.setVersion(child.hasNonNull(TARGET_VERSION) ?
+						child.get(TARGET_VERSION).asText() : null);
 
 					originModel.getDependencies().add(originDependency);
 					targetModel.getDependencies().add(targetDependency);
@@ -695,18 +700,21 @@ public class Transformer {
 				break;
 			case MODULES:
 				for (JsonNode child: entry.getValue()) {
-					if (!child.hasNonNull("groupId") || !child.hasNonNull("artifactId")) {
+					if (!child.hasNonNull(GROUP_ID) || !child.hasNonNull(ARTIFACT_ID)) {
 						continue;
 					}
 
 					Model originModel = new Model();
 					Model targetModel = new Model();
-					originModel.setGroupId(child.get("groupId").asText());
-					originModel.setArtifactId(child.get("artifactId").asText());
+					originModel.setGroupId(child.get(GROUP_ID).asText());
+					originModel.setArtifactId(child.get(ARTIFACT_ID).asText());
 
-					targetModel.setGroupId(child.hasNonNull("targetGroupId") ? child.get("targetGroupId").asText() : null);
-					targetModel.setArtifactId(child.hasNonNull("targetArtifactId") ? child.get("targetArtifactId").asText() : null);
-					targetModel.setVersion(child.hasNonNull("targetVersion") ? child.get("targetVersion").asText() : null);
+					targetModel.setGroupId(child.hasNonNull(TARGET_GROUP_ID) ?
+						child.get(TARGET_GROUP_ID).asText() : null);
+					targetModel.setArtifactId(child.hasNonNull(TARGET_ARTIFACT_ID) ?
+						child.get(TARGET_ARTIFACT_ID).asText() : null);
+					targetModel.setVersion(child.hasNonNull(TARGET_VERSION) ?
+						child.get(TARGET_VERSION).asText() : null);
 					map.put(originModel, targetModel);
 				}
 				break;

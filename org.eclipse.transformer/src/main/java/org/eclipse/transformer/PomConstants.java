@@ -16,29 +16,22 @@
  */
 package org.eclipse.transformer;
 
-public enum PomType {
-	DEPENDENCIES("dependencies"),
-	MODULES("modules"),
+public class PomConstants {
 
-	NONE("none"),
-	;
+	public static final String MODULES = "modules";
 
-	private final String name;
+	public static final String DEPENDENCIES = "dependencies";
 
-	PomType(String name) {
-		this.name = name;
-	}
+	public static final String GROUP_ID = "groupId";
 
-	public String getName() {
-		return name;
-	}
+	public static final String ARTIFACT_ID = "artifactId";
 
-	public static PomType getByName(String name) {
-		for (PomType pomType: PomType.values()) {
-			if (pomType.getName().equals(name)) {
-				return pomType;
-			}
-		}
-		return PomType.NONE;
-	}
+	public static final String VERSION = "version";
+
+	public static final String TARGET_GROUP_ID = "targetGroupId";
+
+	public static final String TARGET_ARTIFACT_ID = "targetArtifactId";
+
+	public static final String TARGET_VERSION = "targetVersion";
+
 }

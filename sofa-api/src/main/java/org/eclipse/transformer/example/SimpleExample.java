@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.eclipse.transformer.example;
 
 import org.eclipse.transformer.ApiTransformOptions;
@@ -72,29 +88,21 @@ public class SimpleExample {
 	 * "javax.batch.api.chunk=xxx.batch.api.chunk"
 	 * */
 	public static CustomRules customJakartaTransform() {
-		//List<String> immediatesList = new ArrayList<>(Arrays.asList(
-		//	"tr", "javax.servlet", "xxx.servlet", "tr", "javax.servlet.http", "xxx.servlet.http"));
-		//
-		//List<String> renameList = new ArrayList<>(Arrays.asList(
-		//	"alipay-api/src/main/resources/jakarta-renames-test1.properties",
-		//	"alipay-api/src/main/resources/jakarta-renames-test2.properties"));
-		//
-		//List<String> textList = new ArrayList<>(Collections.singleton(
-		//	"org.eclipse.transformer.jakarta/src/main/resources/org/" +
-		//		"eclipse/transformer/jakarta/jakarta-text-master.properties"));
-		//
-		//return new CustomRules.CustomRulesBuilder()
-		//	.setImmediates(immediatesList)
-		//	.setRenames(renameList)
-		//	.setTexts(textList)
-		//	.setContainerType(ContainerType.Jakarta)
-		//	.build();
+		List<String> immediatesList = new ArrayList<>(Arrays.asList(
+			"tr", "javax.servlet", "xxx.servlet", "tr", "javax.servlet.http", "xxx.servlet.http"));
 
-		List<String> pomList = new ArrayList<>(Arrays.asList(
-			"/Users/zzh/Documents/jars/test.json"));
+		List<String> renameList = new ArrayList<>(Arrays.asList(
+			"alipay-api/src/main/resources/jakarta-renames-test1.properties",
+			"alipay-api/src/main/resources/jakarta-renames-test2.properties"));
+
+		List<String> textList = new ArrayList<>(Collections.singleton(
+			"org.eclipse.transformer.jakarta/src/main/resources/org/" +
+				"eclipse/transformer/jakarta/jakarta-text-master.properties"));
 
 		return new CustomRules.CustomRulesBuilder()
-			.setPoms(pomList)
+			.setImmediates(immediatesList)
+			.setRenames(renameList)
+			.setTexts(textList)
 			.setContainerType(ContainerType.Jakarta)
 			.build();
 	}
@@ -111,8 +119,8 @@ public class SimpleExample {
 	public static void main(String[] args) {
 
 		ApiTransformOptions options = new ApiTransformOptions(customJakartaTransform(),
-			"/Users/zzh/Documents/jars/buservice-sdk-1.0.0.20230608.jar",
-			"/Users/zzh/Documents/buservice-sdk-1.0.0.20230608-jakarta.jar");
+			"/xxx/xxx/xxx.jar",
+			"/xxx/xxx/xxx-jakarta.jar");
 
 		Transformer transformer = new Transformer(options);
 		Transformer.ResultCode rc = transformer.run();
