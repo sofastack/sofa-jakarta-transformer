@@ -18,6 +18,7 @@ public enum ActionType {
 	RENAME("Rename Action"),
 
 	CLASS("Class Action", ".class"),
+	POM("Pom Action", "pom.xml"),
 	MANIFEST("Manifest Action", "manifest.mf"),
 	FEATURE("Feature Action", ".mf"), // Sub of MANIFEST
 	SERVICE_LOADER_CONFIG("Service Config Action"),

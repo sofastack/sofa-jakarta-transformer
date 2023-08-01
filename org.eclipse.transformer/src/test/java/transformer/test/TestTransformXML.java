@@ -105,7 +105,7 @@ public class TestTransformXML extends CaptureTest {
 			ActionContext context = new ActionContextImpl(useLogger,
 				new SelectionRuleImpl(useLogger, getIncludes(), getExcludes()),
 				new SignatureRuleImpl(useLogger, null, null, null, null, getMasterXmlUpdates(), null,
-					Collections.emptyMap()));
+					Collections.emptyMap(), null));
 			textAction = new TextActionImpl(context);
 		}
 

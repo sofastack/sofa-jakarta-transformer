@@ -14,6 +14,7 @@ package org.eclipse.transformer.action;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.maven.model.Model;
 import org.eclipse.transformer.util.SignatureUtils;
 
 /**
@@ -87,6 +88,9 @@ public interface SignatureRule {
 
 	Map<String, String> getPackageVersions();
 	Map<String, Map<String, String>> getSpecificPackageVersions();
+
+	Map<String, Map<Model, Model>> getPomUpdates();
+
 	String replacePackageVersion(String attributeName, String packageName, String initialVersion);
 
 	// Category 3: Bundle updates
@@ -122,6 +126,9 @@ public interface SignatureRule {
 	String transformDescriptor(String inputConstant);
 
 	String transformSignature(String initialSignature, SignatureType signatureType);
+
+	String transformModel(Model originModel);
+
 
 	enum SignatureType {
 		CLASS,

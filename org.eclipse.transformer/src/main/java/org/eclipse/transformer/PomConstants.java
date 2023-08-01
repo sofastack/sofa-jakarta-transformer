@@ -16,21 +16,22 @@
  */
 package org.eclipse.transformer;
 
-import org.eclipse.transformer.jakarta.JakartaOptionsContainer;
-import org.eclipse.transformer.jakarta.OptionsContainer;
+public class PomConstants {
 
-public enum ContainerType {
+	public static final String MODULES = "modules";
 
-	Jakarta(JakartaOptionsContainer.JAKARTA_OPTIONS_CONTAINER),
-	None(null);
+	public static final String DEPENDENCIES = "dependencies";
 
-	private final OptionsContainer optionsContainer;
+	public static final String GROUP_ID = "groupId";
 
-	public OptionsContainer getOptionsContainer() {
-		return optionsContainer;
-	}
+	public static final String ARTIFACT_ID = "artifactId";
 
-	ContainerType(OptionsContainer optionsContainer) {
-		this.optionsContainer = optionsContainer;
-	}
+	public static final String VERSION = "version";
+
+	public static final String TARGET_GROUP_ID = "targetGroupId";
+
+	public static final String TARGET_ARTIFACT_ID = "targetArtifactId";
+
+	public static final String TARGET_VERSION = "targetVersion";
+
 }

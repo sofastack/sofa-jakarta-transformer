@@ -200,7 +200,7 @@ public class TestTransformManifest extends CaptureTest {
 			ActionContext context = new ActionContextImpl(useLogger,
 				new SelectionRuleImpl(useLogger, getIncludes(), getExcludes()),
 				new SignatureRuleImpl(useLogger, getPackageRenames(), getPackageVersions(), null, getBundleUpdates(),
-					null, getDirectStrings(), Collections.emptyMap()));
+					null, getDirectStrings(), Collections.emptyMap(), null));
 
 			jakartaManifestAction = new ManifestActionImpl(context, ActionType.MANIFEST);
 		}
@@ -216,7 +216,7 @@ public class TestTransformManifest extends CaptureTest {
 			ActionContext context = new ActionContextImpl(useLogger,
 				new SelectionRuleImpl(useLogger, getIncludes(), getExcludes()),
 				new SignatureRuleImpl(useLogger, getPackageRenames(), getPackageVersions(), null, null, null, null,
-					Collections.emptyMap()));
+					Collections.emptyMap(), null));
 
 			jakartaFeatureAction = new ManifestActionImpl(context, ActionType.FEATURE);
 		}
@@ -235,7 +235,7 @@ public class TestTransformManifest extends CaptureTest {
 			ActionContext context = new ActionContextImpl(useLogger,
 				new SelectionRuleImpl(useLogger, getIncludes(), getExcludes()), new SignatureRuleImpl(useLogger,
 					getPackageRenames(), getPackageVersions(), null, getBundleUpdatesTx(), null, getDirectStrings(),
-					Collections.emptyMap()));
+					Collections.emptyMap(), null));
 
 			jakartaManifestActionTx = new ManifestActionImpl(context, ActionType.MANIFEST);
 
@@ -252,7 +252,7 @@ public class TestTransformManifest extends CaptureTest {
 			ActionContext context = new ActionContextImpl(useLogger,
 				new SelectionRuleImpl(useLogger, getIncludes(), getExcludes()), new SignatureRuleImpl(useLogger,
 					getPackageRenames(), getPackageVersions(), getSpecificPackageVersions(), getBundleUpdatesTx(),
-					null, getDirectStrings(), Collections.emptyMap()));
+					null, getDirectStrings(), Collections.emptyMap(), null));
 
 			specificJakartaManifestAction = new ManifestActionImpl(context, ActionType.MANIFEST);
 		}
@@ -644,7 +644,7 @@ public class TestTransformManifest extends CaptureTest {
 
 			ActionContext context = new ActionContextImpl(useLogger,
 				new SelectionRuleImpl(useLogger, getIncludes(), getExcludes()), new SignatureRuleImpl(useLogger,
-					getPackageRenames(), getPackageVersions(), null, null, null, null, Collections.emptyMap()));
+					getPackageRenames(), getPackageVersions(), null, null, null, null, Collections.emptyMap(), null));
 			manifestAction_test = new ManifestActionImpl_Test(context);
 		}
 
@@ -661,7 +661,7 @@ public class TestTransformManifest extends CaptureTest {
 				new SelectionRuleImpl(useLogger, getIncludes(), getExcludes()),
 				new SignatureRuleImpl(useLogger,
 					getPackageRenames(), getPackageVersions(), getSpecificPackageVersions(),
-					null, null, null, Collections.emptyMap()));
+					null, null, null, Collections.emptyMap(), null));
 
 			specificManifestAction_test = new ManifestActionImpl_Test(context);
 		}
