@@ -54,6 +54,9 @@ public enum AppOption {
 	RULES_MASTER_TEXT(new Settings("tf", "text", "Map of filenames to property files", Settings.HAS_ARG,
 		!Settings.HAS_ARGS, !Settings.IS_REQUIRED, Settings.NO_GROUP)),
 
+	RULES_POM(new Settings("tm", "pom", "Map of filenames to json files", Settings.HAS_ARG,
+		!Settings.HAS_ARGS, !Settings.IS_REQUIRED, Settings.NO_GROUP)),
+
 	RULES_IMMEDIATE_DATA(new Settings("ti", "immediate", "Immediate rule data", !Settings.HAS_ARG, !Settings.HAS_ARGS,
 		Settings.HAS_ARG_COUNT, 3, !Settings.IS_REQUIRED, Settings.NO_GROUP)),
 

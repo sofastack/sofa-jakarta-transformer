@@ -267,7 +267,9 @@ public class ZipActionImpl extends ContainerActionImpl implements ElementAction 
 					int inputLength = Math.toIntExact(inputEntry.getSize());
 
 					useLogger.debug("[ {}.{} ] Entry [ {} ] Size [ {} ]", className, methodName, inputName, inputLength);
-
+					if (inputName.endsWith("pom.xml")) {
+						getLogger().debug("catch a pom");
+					}
 					Action action = selectAction(inputName);
 
 					// Duplicate checks must be done for each case

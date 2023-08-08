@@ -16,21 +16,29 @@
  */
 package org.eclipse.transformer;
 
-import org.eclipse.transformer.jakarta.JakartaOptionsContainer;
-import org.eclipse.transformer.jakarta.OptionsContainer;
+public enum PomType {
+	DEPENDENCIES("dependencies"),
+	MODULES("modules"),
 
-public enum ContainerType {
+	NONE("none"),
+	;
 
-	Jakarta(JakartaOptionsContainer.JAKARTA_OPTIONS_CONTAINER),
-	None(null);
+	private final String name;
 
-	private final OptionsContainer optionsContainer;
-
-	public OptionsContainer getOptionsContainer() {
-		return optionsContainer;
+	PomType(String name) {
+		this.name = name;
 	}
 
-	ContainerType(OptionsContainer optionsContainer) {
-		this.optionsContainer = optionsContainer;
+	public String getName() {
+		return name;
+	}
+
+	public static PomType getByName(String name) {
+		for (PomType pomType: PomType.values()) {
+			if (pomType.getName().equals(name)) {
+				return pomType;
+			}
+		}
+		return PomType.NONE;
 	}
 }

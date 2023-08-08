@@ -16,6 +16,8 @@
  */
 package org.eclipse.transformer.maven;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
@@ -36,16 +38,18 @@ import org.eclipse.transformer.CustomRules;
 import org.eclipse.transformer.CustomRules.CustomRulesBuilder;
 import org.eclipse.transformer.Transformer;
 import org.eclipse.transformer.Transformer.ResultCode;
-import org.eclipse.transformer.maven.configuration.JakartaTransformerArtifact;
 import org.eclipse.transformer.maven.configuration.JakartaTransformerRules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+
+import static org.eclipse.transformer.PomConstants.*;
 
 /**
  * Transforms a specified artifact into a new artifact for install and deploy phase.
@@ -53,7 +57,8 @@ import java.util.List;
  * @author yuanxuan
  * @version : JakartaJarTransformerMojo.java, v 0.1 2023年06月29日 12:04 yuanxuan Exp $
  */
-@Mojo(name = "jakarta", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE, threadSafe = true)
+@Mojo(name = "jakarta", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution =
+	ResolutionScope.COMPILE, threadSafe = true)
 public class JakartaJarTransformerMojo extends AbstractMojo {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -93,17 +98,8 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 	@Parameter(defaultValue = "true")
 	private boolean attach;
 
-	/**
-	 * The input artifacts to transform.
-	 */
-	@Parameter
-	private List<JakartaTransformerArtifact> artifacts = new ArrayList<>();
-
 	@Parameter(defaultValue = "false")
 	private boolean skip;
-
-	@Parameter(defaultValue = "jakarta")
-	private String artifactIdSuffix;
 
 	@Parameter
 	private JakartaTransformerRules rules;
@@ -113,36 +109,51 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 
 	private List<Artifact> transformedArtifacts = new ArrayList<>();
 
+	private JsonNode moduleConfig;
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (isSkip()) {
 			logger.info("jakarta transform skipped");
 			return;
 		}
+
+
+
 		String extension = artifactHandlerManager.getArtifactHandler(project.getPackaging()).getExtension();
-		if (artifacts == null || artifacts.isEmpty()) {
-			logger.info("jakarta transform skipped for no artifacts config");
-			return;
-		}
 		if ("pom".equals(extension)) {
 			return;
 		}
-		if (project.getArtifactId() == null || !match(project.getArtifact())) {
+		try {
+			moduleConfig = match(project.getArtifact());
+		} catch (IOException e) {
+			throw new MojoExecutionException("fail to read json config");
+		}
+		if (project.getArtifactId() == null || moduleConfig == null) {
 			return;
 		}
-		//handle pom.xml
+		// handle pom.xml
 		transformPomFile();
-		//handle jar
+		// handle jar
 		transformJar();
-		//add transform artifact into project attach artifact
+		// add transform artifact into project attach artifact
 		addProjectAttachArtifact();
 
 	}
 
-	private boolean match(Artifact artifact) {
-		return artifacts.stream().filter(
-			configArtifact -> configArtifact.getGroupId().equals(artifact.getGroupId()) && configArtifact.getArtifactId()
-				.equals(artifact.getArtifactId()) && (configArtifact.getVersion() != null ? configArtifact.getVersion().equals(
-				artifact.getVersion()) : true)).findAny().isPresent();
+	private JsonNode match(Artifact artifact) throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode rootNode = mapper.readTree(new File(rules.getPom()));
+		JsonNode moduleNode = rootNode.get(MODULES);
+		for (JsonNode child: moduleNode) {
+			if (!child.hasNonNull(GROUP_ID) || !child.hasNonNull(ARTIFACT_ID)) {
+				continue;
+			}
+			if (child.get(GROUP_ID).asText().equals(artifact.getGroupId()) &&
+				child.get(ARTIFACT_ID).asText().equals(artifact.getArtifactId())) {
+				return child;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -151,20 +162,23 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 	private void transformPomFile() {
 		File file = project.getFile();
 		if (isFile(file)) {
-			String transformedFileName = generateFileName(file.getName(), project.getVersion());
+			String transformedFileName = "pom.xml";
+
 			String transformedFile = getOutput(transformedFileName);
-			String transformedArtifactId = transformArtifactId(project.getArtifactId());
-			List<String> artifactIdRule = Arrays.asList("td", project.getArtifactId(), transformedArtifactId);
-			Transformer transformer = buildTransformer(project.getFile().getAbsolutePath(), transformedFile, artifactIdRule);
+			Transformer transformer = buildTransformer(project.getFile().getAbsolutePath(), transformedFile,
+				rules.getImmediates());
 			ResultCode rc = transformer.run();
 			if (rc != Transformer.ResultCode.SUCCESS_RC) {
 				logger.error("fail to transform:{}.rc:{}", file.getAbsolutePath(), rc);
 			} else {
 				ProjectArtifact projectArtifact = new ProjectArtifact(project);
-				projectArtifact.setArtifactId(transformedArtifactId);
+				projectArtifact.setArtifactId(moduleConfig.hasNonNull(TARGET_ARTIFACT_ID) ?
+					moduleConfig.get(TARGET_ARTIFACT_ID).asText() : projectArtifact.getArtifactId());
+				projectArtifact.selectVersion(moduleConfig.hasNonNull(TARGET_VERSION) ?
+					moduleConfig.get(TARGET_VERSION).asText() : projectArtifact.getVersion());
 				projectArtifact.setFile(new File(transformedFile));
 				addTransformedArtifact(projectArtifact);
-				logger.info("success to transform:{}", file.getAbsolutePath());
+				logger.info("success to transform: {}", file.getAbsolutePath());
 			}
 		}
 	}
@@ -173,30 +187,39 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 		if (project.getArtifact() == null) {
 			return;
 		}
-		//transform artifact
+		// transform artifact
 		doTransformJar(project.getArtifact());
 		project.getAttachedArtifacts().stream().filter(artifact ->
-			artifact.getType().equalsIgnoreCase("java-source") || artifact.getType().equalsIgnoreCase("java-doc")).forEach(
-			this::doTransformJar);
+			artifact.getType().equalsIgnoreCase("java-source") || artifact.getType()
+				.equalsIgnoreCase("javadoc")).forEach(this::doTransformJar);
 	}
 
 	private void doTransformJar(Artifact artifact) {
 		File file = artifact.getFile();
+		String suffix = "";
 		if (isFile(file)) {
-			String transformedFileName = generateFileName(file.getName(), project.getVersion());
+			if (artifact.getType().equalsIgnoreCase("java-source")) {
+				suffix = "-sources";
+			}
+			else if (artifact.getType().equalsIgnoreCase("javadoc")) {
+				suffix = "-javadoc";
+			}
+			String transformedFileName = generateFileName(file.getName(), suffix);
 			String transformedFile = getOutput(transformedFileName);
-			String transformedArtifactId = transformArtifactId(project.getArtifactId());
-			Transformer transformer = buildTransformer(file.getAbsolutePath(), transformedFile, null);
+			Transformer transformer = buildTransformer(file.getAbsolutePath(), transformedFile, rules.getImmediates());
 			transformer.logRules();
 			ResultCode rc = transformer.run();
 			if (rc != Transformer.ResultCode.SUCCESS_RC) {
-				logger.error("fail to transform:{}.rc:{}", project.getFile().getAbsolutePath(), rc);
+				logger.error("fail to transform: {}， rc: {}", project.getFile().getAbsolutePath(), rc);
 			} else {
 				Artifact newArtifact = ArtifactUtils.copyArtifact(artifact);
-				newArtifact.setArtifactId(transformedArtifactId);
+				newArtifact.setArtifactId(moduleConfig.hasNonNull(TARGET_ARTIFACT_ID) ?
+					moduleConfig.get(TARGET_ARTIFACT_ID).asText() : artifact.getArtifactId());
+				newArtifact.selectVersion(moduleConfig.hasNonNull(TARGET_VERSION) ?
+					moduleConfig.get(TARGET_VERSION).asText() : artifact.getVersion());
 				newArtifact.setFile(new File(transformedFile));
 				addTransformedArtifact(newArtifact);
-				logger.info("success to transform:{}", project.getFile().getAbsolutePath());
+				logger.info("success to transform: {}", project.getFile().getAbsolutePath());
 			}
 		}
 
@@ -221,12 +244,13 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 				.setOverwrite(rules.isOverwrite())
 				.setRenames(rules.getRenames())
 				.setTexts(rules.getTexts())
+				.setPoms(new ArrayList<>(Collections.singletonList(rules.getPom())))
 				.setContainerType(ContainerType.Jakarta)
 				.setPerClassConstants(rules.getPerClassConstants())
 				.setInvert(rules.isInvert())
 				.build();
 		}
-		return new CustomRulesBuilder().setContainerType(ContainerType.Jakarta).setOverwrite(true).setImmediates(new ArrayList<>()).build();
+		return new CustomRulesBuilder().setContainerType(ContainerType.Jakarta).setOverwrite(true).build();
 	}
 
 	private Transformer buildTransformer(String inputFile, String outputFile, List<String> immediates) {
@@ -242,22 +266,11 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 		return Paths.get(buildDirectory.toURI()).resolve(fileName).toFile().getAbsolutePath();
 	}
 
-	private String generateFileName(String originFileName, String version) {
-		String replace;
-		if (version.contains("-SNAPSHOT")) {
-			replace = version.split("-SNAPSHOT")[0] + "-" + artifactIdSuffix + "-SNAPSHOT";
-		} else {
-			replace = version + "-" + artifactIdSuffix;
-		}
-		if (originFileName.contains(version)) {
-			return originFileName.replaceFirst(version, replace);
-		} else {
-			return originFileName;
-		}
-	}
-
-	private String transformArtifactId(String artifactId) {
-		return artifactId + "-" + artifactIdSuffix;
+	private String generateFileName(String name, String suffix) {
+		return moduleConfig.get(TARGET_GROUP_ID).asText() + "-" + (moduleConfig.hasNonNull(TARGET_ARTIFACT_ID)
+			? moduleConfig.get(TARGET_ARTIFACT_ID).asText() : project.getArtifact().getArtifactId()) + "-" +
+			(moduleConfig.hasNonNull(TARGET_VERSION) ? moduleConfig.get(TARGET_VERSION).asText() :
+				project.getArtifact().getVersion()) + suffix + name.substring(name.lastIndexOf("."));
 	}
 
 	private boolean isFile(File file) {
@@ -304,14 +317,6 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 		this.attach = attach;
 	}
 
-	public List<JakartaTransformerArtifact> getArtifacts() {
-		return artifacts;
-	}
-
-	public void setArtifacts(List<JakartaTransformerArtifact> artifacts) {
-		this.artifacts = artifacts;
-	}
-
 	public boolean isSkip() {
 		return skip;
 	}
@@ -330,13 +335,5 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 
 	public ArtifactHandlerManager getArtifactHandlerManager() {
 		return artifactHandlerManager;
-	}
-
-	public String getArtifactIdSuffix() {
-		return artifactIdSuffix;
-	}
-
-	public void setArtifactIdSuffix(String artifactIdSuffix) {
-		this.artifactIdSuffix = artifactIdSuffix;
 	}
 }
