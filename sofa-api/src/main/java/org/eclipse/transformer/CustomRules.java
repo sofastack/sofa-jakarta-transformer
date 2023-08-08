@@ -19,6 +19,9 @@ package org.eclipse.transformer;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Contain all rules defined by user, mainly used in the api and maven plugin.
+ * */
 public class CustomRules {
 
 	private List<String> selections;
@@ -35,9 +38,10 @@ public class CustomRules {
 	private boolean			widen;
 	private ContainerType containerType;
 
-	public CustomRules(List<String> selections, List<String> renames, List<String> versions, List<String> bundles, List<String> directs,
-					   List<String> texts, List<String> perClassConstants, List<String> poms, List<String> immediates, boolean invert,
-					   boolean overwrite, boolean widen, ContainerType containerType) {
+	public CustomRules(List<String> selections, List<String> renames, List<String> versions, List<String> bundles,
+					   List<String> directs, List<String> texts, List<String> perClassConstants, List<String> poms,
+					   List<String> immediates, boolean invert, boolean overwrite, boolean widen,
+					   ContainerType containerType) {
 		this.selections = selections;
 		this.renames = renames;
 		this.versions = versions;
@@ -166,9 +170,11 @@ public class CustomRules {
 	@Override
 	public String toString() {
 		return String.format(
-			"selections=%s, renames=%s, versions=%s, bundles=%s, directs=%s, texts=%s, perClassConstants=%s, immediates=%s, invert=%s, overwrite=%s, widen=%s, defaultOptions=%s",
+			"selections=%s, renames=%s, versions=%s, bundles=%s, directs=%s, texts=%s, perClassConstants=%s, " +
+				"immediates=%s, invert=%s, overwrite=%s, widen=%s, defaultOptions=%s",
 			getSelections(), getRenames(), getVersions(), getBundles(), getDirects(), getTexts(),
-			getPerClassConstants(), getImmediates(), isInvert(), isOverwrite(), isWiden(), getContainerType().getOptionsContainer().getClass().getSimpleName());
+			getPerClassConstants(), getImmediates(), isInvert(), isOverwrite(), isWiden(),
+			getContainerType().getOptionsContainer().getClass().getSimpleName());
 	}
 
 	public static class CustomRulesBuilder {
