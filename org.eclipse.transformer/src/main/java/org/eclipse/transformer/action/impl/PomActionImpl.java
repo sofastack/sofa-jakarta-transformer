@@ -58,9 +58,8 @@ public class PomActionImpl extends ElementActionImpl {
 
 	@Override
 	public boolean acceptResource(String resourceName, File resourceFile) {
-		String fileName = Arrays.stream(resourceName.split(File.pathSeparator))
-			.reduce((first, second) -> second).toString();
-		return fileName.equals("pom.xml") || resourceName.endsWith(".pom");
+
+		return resourceName.endsWith("pom.xml") || resourceName.endsWith(".pom");
 	}
 
 	protected List<StringReplacement> createActiveReplacements(SignatureRule signatureRule) {
