@@ -34,10 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 public class PomActionImpl extends ElementActionImpl {
@@ -61,6 +58,7 @@ public class PomActionImpl extends ElementActionImpl {
 
 	@Override
 	public boolean acceptResource(String resourceName, File resourceFile) {
+
 		return resourceName.endsWith("pom.xml") || resourceName.endsWith(".pom");
 	}
 
@@ -90,12 +88,11 @@ public class PomActionImpl extends ElementActionImpl {
 			MavenXpp3Writer mavenXpp3Writer = new MavenXpp3Writer();
 			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 			mavenXpp3Writer.write(byteArrayOutputStream, model);
+
 			ByteBuffer byteBuffer = ByteBuffer.wrap(byteArrayOutputStream.toByteArray());
 			outputData = new ByteDataImpl(inputData.name(), byteBuffer, inputData.charset());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		} catch (XmlPullParserException e) {
-			throw new RuntimeException(e);
+		} catch (IOException | XmlPullParserException e) {
+			throw new TransformException("Failed to parse pom.xml [ " + inputData.name() + " ]", e);
 		}
 
 		stopRecording(inputData);
@@ -111,15 +108,18 @@ public class PomActionImpl extends ElementActionImpl {
 				Dependency currentValue = entry.getValue().getDependencies().get(0);
 				if (currentKey.getGroupId().equals(dependency.getGroupId()) &&
 					currentKey.getArtifactId().equals(dependency.getArtifactId())) {
-					dependency.setGroupId(currentValue.getGroupId() == null ? dependency.getGroupId() : currentValue.getGroupId());
-					dependency.setArtifactId(currentValue.getArtifactId() == null ? dependency.getArtifactId() : currentValue.getArtifactId());
-					dependency.setVersion(currentValue.getVersion() == null ? dependency.getVersion() : currentValue.getVersion());
+					dependency.setGroupId(currentValue.getGroupId() == null ? dependency.getGroupId() :
+						currentValue.getGroupId());
+					dependency.setArtifactId(currentValue.getArtifactId() == null ? dependency.getArtifactId() :
+						currentValue.getArtifactId());
+					dependency.setVersion(currentValue.getVersion() == null ? dependency.getVersion() :
+						currentValue.getVersion());
 					hasChanged = true;
 					addReplacement();
 					break;
 				}
 			}
-
+			// If the dependencies have been transformed by custom pom rules, just return.
 			if (hasChanged) {
 				return;
 			}
@@ -135,9 +135,12 @@ public class PomActionImpl extends ElementActionImpl {
 		Map<Model, Model> modulesMap = getSignatureRule().getPomUpdates().get(PomType.MODULES.getName());
 		for (Entry<Model, Model> entry: modulesMap.entrySet()) {
 			if (entry.getKey().getArtifactId().equals(model.getArtifactId())) {
-				model.setGroupId(entry.getValue().getGroupId() == null ? model.getGroupId() : entry.getValue().getGroupId());
-				model.setArtifactId(entry.getValue().getArtifactId() == null ? model.getArtifactId() : entry.getValue().getArtifactId());
-				model.setVersion(entry.getValue().getVersion() == null ? model.getVersion() : entry.getValue().getVersion());
+				model.setGroupId(entry.getValue().getGroupId() == null ? model.getGroupId() :
+					entry.getValue().getGroupId());
+				model.setArtifactId(entry.getValue().getArtifactId() == null ? model.getArtifactId() :
+					entry.getValue().getArtifactId());
+				model.setVersion(entry.getValue().getVersion() == null ? model.getVersion() :
+					entry.getValue().getVersion());
 				addReplacement();
 				break;
 			}

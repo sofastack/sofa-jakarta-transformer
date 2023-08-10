@@ -16,6 +16,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * This container contain all rules which can transform all code related to Javax to Jakarta, the scenario is
+ * <a href="https://jakarta.ee/blogs/javax-jakartaee-namespace-ecosystem-progress/">this</a>
+ * */
 public class JakartaOptionsContainer implements OptionsContainer {
 
 	public static final String	DEFAULT_SELECTION_REFERENCE		= "jakarta-selection.properties";

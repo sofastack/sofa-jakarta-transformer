@@ -317,9 +317,6 @@ public class SignatureRuleImpl implements SignatureRule {
 
 	protected final Map<String, Map<Model, Model>>	pomUpdates;
 
-
-
-
 	@Override
 	public Map<String, String> getPackageVersions() {
 		return packageVersions;

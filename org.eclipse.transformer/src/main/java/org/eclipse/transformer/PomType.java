@@ -19,7 +19,6 @@ package org.eclipse.transformer;
 public enum PomType {
 	DEPENDENCIES("dependencies"),
 	MODULES("modules"),
-
 	NONE("none"),
 	;
 

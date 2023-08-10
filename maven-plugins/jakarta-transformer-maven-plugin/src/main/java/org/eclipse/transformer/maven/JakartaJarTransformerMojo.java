@@ -111,13 +111,19 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 
 	private JsonNode moduleConfig;
 
+	private static final String JAVADOC_EXTENSION = "javadoc";
+
+	private static final String JAVA_SOURCE_EXTENSION = "java-source";
+
+	private static final String JAVADOC_SUFFIX = "-javadoc";
+
+	private static final String JAVA_SOURCE_SUFFIX = "-sources";
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (isSkip()) {
 			logger.info("jakarta transform skipped");
 			return;
 		}
-
-
 
 		String extension = artifactHandlerManager.getArtifactHandler(project.getPackaging()).getExtension();
 		if ("pom".equals(extension)) {
@@ -140,6 +146,9 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 
 	}
 
+	/**
+	 * Check whether current module need to be transformed.
+	 * */
 	private JsonNode match(Artifact artifact) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode rootNode = mapper.readTree(new File(rules.getPom()));
@@ -157,17 +166,17 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 	}
 
 	/**
-	 * transform module pom
+	 * Transform pom.xml of a module.
 	 */
 	private void transformPomFile() {
 		File file = project.getFile();
 		if (isFile(file)) {
 			String transformedFileName = "pom.xml";
-
 			String transformedFile = getOutput(transformedFileName);
 			Transformer transformer = buildTransformer(project.getFile().getAbsolutePath(), transformedFile,
 				rules.getImmediates());
 			ResultCode rc = transformer.run();
+
 			if (rc != Transformer.ResultCode.SUCCESS_RC) {
 				logger.error("fail to transform:{}.rc:{}", file.getAbsolutePath(), rc);
 			} else {
@@ -176,6 +185,7 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 					moduleConfig.get(TARGET_ARTIFACT_ID).asText() : projectArtifact.getArtifactId());
 				projectArtifact.selectVersion(moduleConfig.hasNonNull(TARGET_VERSION) ?
 					moduleConfig.get(TARGET_VERSION).asText() : projectArtifact.getVersion());
+
 				projectArtifact.setFile(new File(transformedFile));
 				addTransformedArtifact(projectArtifact);
 				logger.info("success to transform: {}", file.getAbsolutePath());
@@ -190,19 +200,19 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 		// transform artifact
 		doTransformJar(project.getArtifact());
 		project.getAttachedArtifacts().stream().filter(artifact ->
-			artifact.getType().equalsIgnoreCase("java-source") || artifact.getType()
-				.equalsIgnoreCase("javadoc")).forEach(this::doTransformJar);
+			artifact.getType().equalsIgnoreCase(JAVA_SOURCE_EXTENSION) || artifact.getType()
+				.equalsIgnoreCase(JAVADOC_EXTENSION)).forEach(this::doTransformJar);
 	}
 
 	private void doTransformJar(Artifact artifact) {
 		File file = artifact.getFile();
 		String suffix = "";
 		if (isFile(file)) {
-			if (artifact.getType().equalsIgnoreCase("java-source")) {
-				suffix = "-sources";
+			if (artifact.getType().equalsIgnoreCase(JAVA_SOURCE_EXTENSION)) {
+				suffix = JAVA_SOURCE_SUFFIX;
 			}
-			else if (artifact.getType().equalsIgnoreCase("javadoc")) {
-				suffix = "-javadoc";
+			else if (artifact.getType().equalsIgnoreCase(JAVADOC_EXTENSION)) {
+				suffix = JAVADOC_SUFFIX;
 			}
 			String transformedFileName = generateFileName(file.getName(), suffix);
 			String transformedFile = getOutput(transformedFileName);

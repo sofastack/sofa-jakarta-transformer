@@ -88,7 +88,6 @@ public interface SignatureRule {
 
 	Map<String, String> getPackageVersions();
 	Map<String, Map<String, String>> getSpecificPackageVersions();
-
 	Map<String, Map<Model, Model>> getPomUpdates();
 
 	String replacePackageVersion(String attributeName, String packageName, String initialVersion);

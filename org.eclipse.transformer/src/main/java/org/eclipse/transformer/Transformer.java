@@ -624,9 +624,9 @@ public class Transformer {
 	}
 
 	/**
-	 * Load pom rules from json files. In order to better support the transformation
-	 * of the other parts of pom.xml in the future, we use a {@link Model} to
-	 * describe a pom update rule.
+	 * Load pom rules from json files. In order to support the transformation
+	 * of the other parts of pom.xml better in the future, we use a {@link Model}
+	 * to describe a pom update rule.
 	 * */
 	public Map<String, Map<Model, Model>> loadRules4Pom(AppOption ruleOption) {
 		List<String> rulesReferences = options.normalize(options.getOptionValues(ruleOption));
@@ -652,6 +652,9 @@ public class Transformer {
 		return mergedRules;
 	}
 
+	/**
+	 * Load a pom config json file and merge it into loaded rules.
+	 * */
 	private void loadAndMerge(HashMap<String, Map<Model, Model>> rule, ObjectMapper mapper, String ref)
 		throws IOException {
 		JsonNode rootNode = mapper.readTree(new File(ref));
@@ -675,53 +678,64 @@ public class Transformer {
 		switch (PomType.getByName(entry.getKey())) {
 			case DEPENDENCIES:
 				for (JsonNode child: entry.getValue()) {
-					if (!child.hasNonNull(GROUP_ID) || !child.hasNonNull(ARTIFACT_ID)) {
+					if (!hasGA(child)) {
 						continue;
 					}
-					Model originModel = new Model();
-					Model targetModel = new Model();
-
-					Dependency originDependency = new Dependency();
-					originDependency.setGroupId(child.get(GROUP_ID).asText());
-					originDependency.setArtifactId(child.get(ARTIFACT_ID).asText());
-
-					Dependency targetDependency = new Dependency();
-					targetDependency.setGroupId(child.hasNonNull(TARGET_GROUP_ID) ?
-						child.get(TARGET_GROUP_ID).asText() : null);
-					targetDependency.setArtifactId(child.hasNonNull(TARGET_ARTIFACT_ID) ?
-						child.get(TARGET_ARTIFACT_ID).asText() : null);
-					targetDependency.setVersion(child.hasNonNull(TARGET_VERSION) ?
-						child.get(TARGET_VERSION).asText() : null);
-
-					originModel.getDependencies().add(originDependency);
-					targetModel.getDependencies().add(targetDependency);
-					map.put(originModel, targetModel);
+					convertSingleDependency(child, map);
 				}
 				break;
 			case MODULES:
 				for (JsonNode child: entry.getValue()) {
-					if (!child.hasNonNull(GROUP_ID) || !child.hasNonNull(ARTIFACT_ID)) {
+					if (!hasGA(child)) {
 						continue;
 					}
-
-					Model originModel = new Model();
-					Model targetModel = new Model();
-					originModel.setGroupId(child.get(GROUP_ID).asText());
-					originModel.setArtifactId(child.get(ARTIFACT_ID).asText());
-
-					targetModel.setGroupId(child.hasNonNull(TARGET_GROUP_ID) ?
-						child.get(TARGET_GROUP_ID).asText() : null);
-					targetModel.setArtifactId(child.hasNonNull(TARGET_ARTIFACT_ID) ?
-						child.get(TARGET_ARTIFACT_ID).asText() : null);
-					targetModel.setVersion(child.hasNonNull(TARGET_VERSION) ?
-						child.get(TARGET_VERSION).asText() : null);
-					map.put(originModel, targetModel);
+					convertSingleModule(child, map);
 				}
 				break;
 			default:
 				getLogger().warn("Unsupported key: {}", entry.getKey());
 		}
 		return map;
+	}
+
+	private void convertSingleDependency(JsonNode node, Map<Model, Model> map) {
+		Model originModel = new Model();
+		Model targetModel = new Model();
+
+		Dependency originDependency = new Dependency();
+		originDependency.setGroupId(node.get(GROUP_ID).asText());
+		originDependency.setArtifactId(node.get(ARTIFACT_ID).asText());
+
+		Dependency targetDependency = new Dependency();
+		targetDependency.setGroupId(node.hasNonNull(TARGET_GROUP_ID) ?
+			node.get(TARGET_GROUP_ID).asText() : null);
+		targetDependency.setArtifactId(node.hasNonNull(TARGET_ARTIFACT_ID) ?
+			node.get(TARGET_ARTIFACT_ID).asText() : null);
+		targetDependency.setVersion(node.hasNonNull(TARGET_VERSION) ?
+			node.get(TARGET_VERSION).asText() : null);
+
+		originModel.getDependencies().add(originDependency);
+		targetModel.getDependencies().add(targetDependency);
+		map.put(originModel, targetModel);
+	}
+
+	private void convertSingleModule(JsonNode node, Map<Model, Model> map) {
+		Model originModel = new Model();
+		Model targetModel = new Model();
+		originModel.setGroupId(node.get(GROUP_ID).asText());
+		originModel.setArtifactId(node.get(ARTIFACT_ID).asText());
+
+		targetModel.setGroupId(node.hasNonNull(TARGET_GROUP_ID) ?
+			node.get(TARGET_GROUP_ID).asText() : null);
+		targetModel.setArtifactId(node.hasNonNull(TARGET_ARTIFACT_ID) ?
+			node.get(TARGET_ARTIFACT_ID).asText() : null);
+		targetModel.setVersion(node.hasNonNull(TARGET_VERSION) ?
+			node.get(TARGET_VERSION).asText() : null);
+		map.put(originModel, targetModel);
+	}
+
+	private boolean hasGA(JsonNode node) {
+		return node.hasNonNull(GROUP_ID) && node.hasNonNull(ARTIFACT_ID);
 	}
 
 
@@ -1240,7 +1254,7 @@ public class Transformer {
 			// The java and JSP actions must be before the text action.
 			Action javaAction = useSelector.addUsing(JavaActionImpl::new, context);
 			Action jspAction = useSelector.addUsing(JSPActionImpl::new, context);
-			Action pomAction = useSelector.addUsing(PomActionImpl::new, context);
+
 			Action serviceConfigAction = useSelector.addUsing(ServiceLoaderConfigActionImpl::new, context);
 			Action manifestAction = useSelector.addUsing(c -> new ManifestActionImpl(c, ActionType.MANIFEST), context);
 			Action featureAction = useSelector.addUsing(c -> new ManifestActionImpl(c, ActionType.FEATURE), context);
@@ -1252,7 +1266,11 @@ public class Transformer {
 			standardActions.add(classAction);
 			standardActions.add(javaAction); // before text
 			standardActions.add(jspAction); // before text
-			standardActions.add(pomAction); // before text
+			// If there is no custom rule about pom.xml, do not enable pom action.
+			if (pomUpdates != null) {
+				Action pomAction = useSelector.addUsing(PomActionImpl::new, context);
+				standardActions.add(pomAction); // before text
+			}
 			standardActions.add(serviceConfigAction);
 			standardActions.add(manifestAction);
 			standardActions.add(featureAction);
@@ -1365,7 +1383,7 @@ public class Transformer {
 	public void transform() throws TransformException {
 		acceptedAction.apply(inputName, inputFile, outputName, outputFile);
 
-		if (!inputName.endsWith(".xml")) {
+		if (!inputName.endsWith("pom.xml")) {
 			acceptedAction.getLastActiveChanges()
 				.log(getLogger(), inputPath, outputPath);
 		}
