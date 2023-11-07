@@ -40,6 +40,7 @@
 		<!-- Reproducible build -->
 		<project.build.outputTimestamp>1980-02-01T00:00:00Z</project.build.outputTimestamp>
 		<maven.staging.plugin>1.6.13</maven.staging.plugin>
+		<maven.gpg.pluign>3.1.0</maven.gpg.pluign>
 	</properties>
 
 	<url>https://projects.eclipse.org/projects/technology.transformer</url>
