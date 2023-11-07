@@ -54,7 +54,7 @@ jobs:
         include:
         - os: 'ubuntu-latest'
           java: '17'
-          canonical: ${{ (github.repository == 'eclipse/transformer') && ((github.ref == 'refs/heads/main') || (github.ref == 'refs/heads/release')) && (github.event_name != 'pull_request') }}
+          canonical: ${{ (github.repository == 'sofastack/sofa-jakarta-transformer') && ((github.ref == 'refs/heads/main') || (github.ref == 'refs/heads/release')) && (github.event_name != 'pull_request') }}
         - os: 'ubuntu-latest'
           java: '17'
           experimental: true
@@ -88,15 +88,15 @@ jobs:
         distribution: 'temurin'
         java-version: ${{ matrix.java }}
         server-id: ossrh
-        server-username: OSSRH_USERNAME
-        server-password: OSSRH_TOKEN
-        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-        gpg-passphrase: GPG_PASSPHRASE
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
     - name: Publish
       if: ${{ matrix.canonical }}
       run: |
         ./.github/scripts/publish.sh -Possrh
       env:
-        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-        OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
+        GPG_PASSPHRASE: ${{ secrets.MAVEN_USERNAME }}
+        OSSRH_USERNAME: ${{ secrets.MAVEN_PASSWORD }}
+        OSSRH_TOKEN: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
