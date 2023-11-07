@@ -14,7 +14,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.eclipse.transformer</groupId>
+	<groupId>com.alipay.sofa</groupId>
 	<artifactId>org.eclipse.transformer.parent</artifactId>
 	<description>Eclipse Transformer Parent</description>
 	<name>${project.groupId}:${project.artifactId}</name>

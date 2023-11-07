@@ -15,7 +15,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.eclipse.transformer</groupId>
+		<groupId>com.alipay.sofa</groupId>
 		<artifactId>org.eclipse.transformer.parent</artifactId>
 		<version>${revision}</version>
 		<relativePath>../org.eclipse.transformer.parent</relativePath>
@@ -88,7 +88,7 @@
 			<artifactId>shrinkwrap-impl-base</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.eclipse.transformer</groupId>
+			<groupId>com.alipay.sofa</groupId>
 			<artifactId>org.eclipse.transformer.jakarta</artifactId>
 			<version>${project.version}</version>
 			<scope>test</scope>

@@ -1259,18 +1259,19 @@ public class Transformer {
 			Action manifestAction = useSelector.addUsing(c -> new ManifestActionImpl(c, ActionType.MANIFEST), context);
 			Action featureAction = useSelector.addUsing(c -> new ManifestActionImpl(c, ActionType.FEATURE), context);
 			Action textAction = useSelector.addUsing(TextActionImpl::new, context);
-			Action xmlAction = useSelector.addUsing(XmlActionImpl::new, context);
-			Action propertiesAction = useSelector.addUsing(PropertiesActionImpl::new, context);
-
 			List<Action> standardActions = new ArrayList<>();
-			standardActions.add(classAction);
-			standardActions.add(javaAction); // before text
-			standardActions.add(jspAction); // before text
 			// If there is no custom rule about pom.xml, do not enable pom action.
 			if (pomUpdates != null) {
 				Action pomAction = useSelector.addUsing(PomActionImpl::new, context);
 				standardActions.add(pomAction); // before text
 			}
+			Action xmlAction = useSelector.addUsing(XmlActionImpl::new, context);
+			Action propertiesAction = useSelector.addUsing(PropertiesActionImpl::new, context);
+
+			standardActions.add(classAction);
+			standardActions.add(javaAction); // before text
+			standardActions.add(jspAction); // before text
+
 			standardActions.add(serviceConfigAction);
 			standardActions.add(manifestAction);
 			standardActions.add(featureAction);

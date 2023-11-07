@@ -40,7 +40,7 @@
         <finalName>rest-sample</finalName>
         <plugins>
             <plugin>
-                <groupId>org.eclipse.transformer</groupId>
+                <groupId>com.alipay.sofa</groupId>
                 <artifactId>org.eclipse.transformer.maven</artifactId>
                 <version>${revision}</version>
                 <configuration>
