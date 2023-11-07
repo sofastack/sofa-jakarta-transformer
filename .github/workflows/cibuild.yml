@@ -58,7 +58,7 @@ jobs:
         - os: 'ubuntu-latest'
           java: '17'
           experimental: true
-          mavenopts: '-Pbnd-snapshot'
+          mavenopts: '-Psnapshot'
         - os: 'windows-latest'
           java: '17'
     name: JDK${{ matrix.java }} ${{ matrix.os }} ${{ matrix.mavenopts }}
