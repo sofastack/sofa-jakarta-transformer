@@ -19,7 +19,7 @@
 	<properties>
 		<project.build.outputTimestamp>2022-01-02T12:43:14Z</project.build.outputTimestamp>
 	</properties>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>org.osgi</groupId>
@@ -85,7 +85,7 @@
 					<extensions>true</extensions>
 					<dependencies>
 						<dependency>
-							<groupId>org.eclipse.transformer</groupId>
+							<groupId>com.alipay.sofa</groupId>
 							<artifactId>org.eclipse.transformer.bnd.analyzer</artifactId>
 							<version>${transformer.version}</version>
 						</dependency>

@@ -39,6 +39,7 @@ import org.eclipse.transformer.CustomRules.CustomRulesBuilder;
 import org.eclipse.transformer.Transformer;
 import org.eclipse.transformer.Transformer.ResultCode;
 import org.eclipse.transformer.maven.configuration.JakartaTransformerRules;
+import org.eclipse.transformer.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.eclipse.transformer.PomConstants.*;
+import static org.eclipse.transformer.PomConstants.ARTIFACT_ID;
+import static org.eclipse.transformer.PomConstants.GROUP_ID;
+import static org.eclipse.transformer.PomConstants.MODULES;
+import static org.eclipse.transformer.PomConstants.TARGET_ARTIFACT_ID;
+import static org.eclipse.transformer.PomConstants.TARGET_VERSION;
 
 /**
  * Transforms a specified artifact into a new artifact for install and deploy phase.
@@ -148,12 +153,12 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 
 	/**
 	 * Check whether current module need to be transformed.
-	 * */
+	 */
 	private JsonNode match(Artifact artifact) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode rootNode = mapper.readTree(new File(rules.getPom()));
 		JsonNode moduleNode = rootNode.get(MODULES);
-		for (JsonNode child: moduleNode) {
+		for (JsonNode child : moduleNode) {
 			if (!child.hasNonNull(GROUP_ID) || !child.hasNonNull(ARTIFACT_ID)) {
 				continue;
 			}
@@ -171,7 +176,8 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 	private void transformPomFile() {
 		File file = project.getFile();
 		if (isFile(file)) {
-			String transformedFileName = "pom.xml";
+
+			String transformedFileName = FileUtils.getFileNameFromFullyQualifiedFileName(file.getAbsolutePath());
 			String transformedFile = getOutput(transformedFileName);
 			Transformer transformer = buildTransformer(project.getFile().getAbsolutePath(), transformedFile,
 				rules.getImmediates());
@@ -210,8 +216,7 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 		if (isFile(file)) {
 			if (artifact.getType().equalsIgnoreCase(JAVA_SOURCE_EXTENSION)) {
 				suffix = JAVA_SOURCE_SUFFIX;
-			}
-			else if (artifact.getType().equalsIgnoreCase(JAVADOC_EXTENSION)) {
+			} else if (artifact.getType().equalsIgnoreCase(JAVADOC_EXTENSION)) {
 				suffix = JAVADOC_SUFFIX;
 			}
 			String transformedFileName = generateFileName(file.getName(), suffix);
@@ -277,7 +282,7 @@ public class JakartaJarTransformerMojo extends AbstractMojo {
 	}
 
 	private String generateFileName(String name, String suffix) {
-		return moduleConfig.get(TARGET_GROUP_ID).asText() + "-" + (moduleConfig.hasNonNull(TARGET_ARTIFACT_ID)
+		return (moduleConfig.hasNonNull(TARGET_ARTIFACT_ID)
 			? moduleConfig.get(TARGET_ARTIFACT_ID).asText() : project.getArtifact().getArtifactId()) + "-" +
 			(moduleConfig.hasNonNull(TARGET_VERSION) ? moduleConfig.get(TARGET_VERSION).asText() :
 				project.getArtifact().getVersion()) + suffix + name.substring(name.lastIndexOf("."));

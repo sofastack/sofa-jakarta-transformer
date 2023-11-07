@@ -101,6 +101,9 @@ public class PomActionImpl extends ElementActionImpl {
 
 	private void transformDependency(Model model, String inputName) {
 		Map<Model, Model> dependenciesMap = getSignatureRule().getPomUpdates().get(PomType.DEPENDENCIES.getName());
+		if (dependenciesMap == null) {
+			return;
+		}
 		model.getDependencies().forEach((dependency -> {
 			boolean hasChanged = false;
 			for (Entry<Model, Model> entry: dependenciesMap.entrySet()) {

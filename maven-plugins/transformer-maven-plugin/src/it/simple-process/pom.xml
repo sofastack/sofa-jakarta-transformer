@@ -64,7 +64,7 @@
 					<version>3.2.2</version>
 				</plugin>
 				<plugin>
-					<groupId>org.eclipse.transformer</groupId>
+					<groupId>com.alipay.sofa</groupId>
 					<artifactId>transformer-maven-plugin</artifactId>
 					<version>${transformer.version}</version>
 					<extensions>true</extensions>
@@ -139,7 +139,7 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.eclipse.transformer</groupId>
+				<groupId>com.alipay.sofa</groupId>
 				<artifactId>transformer-maven-plugin</artifactId>
 				<executions>
 					<execution>
